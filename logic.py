@@ -23,19 +23,12 @@ teammate_hand = []
 left_oppenent_hand = []
 right_opponent_hand = []
 
-# Define the size of each rectangle
-rect_width = 75
-rect_height = 105
+# Define the size of each card
+card_width = 75
+card_height = 105
 
-# Define the space between rectangles
+# Define the space between card
 space = 20
-
-# Define the colors
-colors = ['blue', 'red', 'green', 'pink', 'yellow', 'cyan', 'magenta']
-
-# Save the colors for each rectangle at the start
-num_cards = 24
-rect_colors = [random.choice(colors) for _ in range(num_cards)]
 
 # deal cards by selecting randomly from deck, and make function for one card at a time
 def deal_cards(current_hand, current_deck):
@@ -43,64 +36,42 @@ def deal_cards(current_hand, current_deck):
     current_hand.append(current_deck[card - 1])
     current_deck.pop(card - 1)
     
-    print(current_hand, current_deck)
+#    print(current_hand, current_deck)
     
     return current_hand, current_deck
 
 # draw cards visually onto screen
-def draw_cards(player, teammate, left, right):
+def draw_cards(player, x, y, vertical):
     for i in range(len(player)):
+        if not vertical:
+            x = 150 + (card_width + space) * i
+            w = card_width
+            h = card_height
+        else:
+            y = 150 + (card_width + space) * i
+            w = card_height
+            h = card_width
         
-        # Positions for bottom row - player's hand
-        bottom_row_y = 850 - rect_height - 20
-        
-        x = 150 + (rect_width + space) * i
-        
-        pygame.draw.rect(screen, 'red', [x, bottom_row_y, rect_width, rect_height])
-        screen.blit(font.render(player[i], True, 'black'), (x + 10, bottom_row_y - 20))
+        pygame.draw.rect(screen, 'red', [x, y, w, h])
+        screen.blit(font.render(player[i], True, 'black'), (x + 10, y + 10))
 
 
 def draw_game(act):
     button_list = []
     # initially on startup (not active) only option is to start game
     if not active:
+        title_text = title_font.render('LOGIC', True, 'black')
+        screen.blit(title_text, (300, 100))
+        
         start = pygame.draw.rect(screen, 'red', [360, 400, 130, 50], 0, 5)
         pygame.draw.rect(screen, 'green', [360, 400, 130, 50], 3, 5)
         start_text = font.render('START', True, 'black')
         screen.blit(start_text, (376, 414))
         button_list.append(start)
         
-#        title = pygame.draw.rect(screen, 'red', [360, 400, 130, 50], 0, 5)
-#        pygame.draw.rect(screen, 'green', [360, 400, 130, 50], 3, 5)
-        title_text = title_font.render('LOGIC', True, 'black')
-        screen.blit(title_text, (300, 100))
-
-        
     # once game started, show game board and user action options
-    else:
-        # Positions for top row - teammate's hand
-        top_row_y = 20
-        for i in range(6):
-            x = 150 + (rect_width + space) * i
-            pygame.draw.rect(screen, rect_colors[i], [x, top_row_y, rect_width, rect_height])
-        
-        # Positions for bottom row - player's hand
-        bottom_row_y = 850 - rect_height - 20
-        for i in range(6, 12):
-            x = 150 + (rect_width + space) * (i - 6)
-            pygame.draw.rect(screen, rect_colors[i], [x, bottom_row_y, rect_width, rect_height])
-        
-        # Positions for left column (flipped dimensions) - left opponent's hand
-        left_col_x = 20
-        for i in range(12, 18):
-            y = 25 + rect_height + space + (rect_width + space) * (i - 12)
-            pygame.draw.rect(screen, rect_colors[i], [left_col_x, y, rect_height, rect_width])
-        
-        # Positions for right column (flipped dimensions) - right opponent's hand
-        right_col_x = 850 - rect_height - 20
-        for i in range(18, 24):
-            y = 25 + rect_height + space + (rect_width + space) * (i - 18)
-            pygame.draw.rect(screen, rect_colors[i], [right_col_x, y, rect_height, rect_width])
+#    else:
+
     return button_list
 
 
@@ -119,13 +90,18 @@ while run:
             teammate_hand, game_deck = deal_cards(teammate_hand, game_deck)
             right_opponent_hand, game_deck = deal_cards(right_opponent_hand, game_deck)
             
-        print(player_hand, teammate_hand, left_oppenent_hand, right_opponent_hand)
+        # prints every player's hand
+#        print(player_hand, teammate_hand, left_oppenent_hand, right_opponent_hand)
         
         initial_deal = False
     
     # once game is started, and cards are dealt, display board
     if active:
-        draw_cards(player_hand, teammate_hand, left_oppenent_hand, right_opponent_hand)
+        draw_cards(player_hand, 150, WIDTH - space - card_height, False)
+        draw_cards(teammate_hand, 150, 20, False)
+        draw_cards(left_oppenent_hand, 20, 150, True)
+        draw_cards(right_opponent_hand, WIDTH - space - card_height, 150, True)
+
     
     buttons = draw_game(active)
     
