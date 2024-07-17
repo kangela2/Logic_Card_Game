@@ -3,16 +3,18 @@ import random
 import pygame
 
 # game variables
-WIDTH = 1200
-HEIGHT = 1200
+cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+one_deck = 2 * cards
+WIDTH = 850
+HEIGHT = 850
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption('Logic')
 fps = 60
 timer = pygame.time.Clock()
 
 # Define the size of each rectangle
-rect_width = 100
-rect_height = 150
+rect_width = 75
+rect_height = 105
 
 # Define the space between rectangles
 space = 20
@@ -28,25 +30,25 @@ def draw_game():
     # Positions for top row
     top_row_y = 20
     for i in range(6):
-        x = 200 + (rect_width + space) * i
+        x = 150 + (rect_width + space) * i
         pygame.draw.rect(screen, rect_colors[i], [x, top_row_y, rect_width, rect_height])
     
     # Positions for bottom row
-    bottom_row_y = 1100 - rect_height - 20
+    bottom_row_y = 850 - rect_height - 20
     for i in range(6, 12):
-        x = 200 + (rect_width + space) * (i - 6)
+        x = 150 + (rect_width + space) * (i - 6)
         pygame.draw.rect(screen, rect_colors[i], [x, bottom_row_y, rect_width, rect_height])
     
     # Positions for left column (flipped dimensions)
-    left_col_x = 50
+    left_col_x = 20
     for i in range(12, 18):
-        y = top_row_y + rect_height + space + (rect_width + space) * (i - 12)
+        y = 25 + rect_height + space + (rect_width + space) * (i - 12)
         pygame.draw.rect(screen, rect_colors[i], [left_col_x, y, rect_height, rect_width])
     
     # Positions for right column (flipped dimensions)
-    right_col_x = 1100 - rect_height - 50
+    right_col_x = 850 - rect_height - 20
     for i in range(18, 24):
-        y = top_row_y + rect_height + space + (rect_width + space) * (i - 18)
+        y = 25 + rect_height + space + (rect_width + space) * (i - 18)
         pygame.draw.rect(screen, rect_colors[i], [right_col_x, y, rect_height, rect_width])
 
 
@@ -59,6 +61,7 @@ while run:
     screen.fill('white')
     draw_game()
     
+    # event handling, if quit pressed, then exit game
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
