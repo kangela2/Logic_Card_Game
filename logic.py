@@ -36,28 +36,42 @@ log_width = 500
 log_height = 320
 log = []
 visible_log = []
-scroll_offset = 0
 
 class Player:
     def __init__(self, name):
         self.name = name
         self.hand = []
         
-    def add_partner(self, player):
+    def set_partner(self, player):
         self.partner = player
         
 def initialize_players():
+    # adds player 1 // user // bottom hand to list of players
     players.append(Player("A"))
+    
+    # adds player 2 // opponent // left hand to list of players
     players.append(Player("B"))
+    
+    # adds player 3 // user's partner // top hand to list of players
     players.append(Player("C"))
+    
+    # adds player 4 // opponent's partner // right hand to list of players
     players.append(Player("D"))
     
-    players[0].add_partner(players[2])
-    players[2].add_partner(players[0])
-    players[1].add_partner(players[3])
-    players[3].add_partner(players[1])
+    
+    # set user's partner as player 3
+    players[0].set_partner(players[2])
+    
+    # set opponent's partner as player 4
+    players[2].set_partner(players[0])
+    
+    # set player 2's partner as user
+    players[1].set_partner(players[3])
+    
+    # set player 4's partner as opponent
+    players[3].set_partner(players[1])
 
-# Custom sort function
+# get key of card based on rank
 def card_key(card):
     return rank_order[card]
 
@@ -102,23 +116,24 @@ def add_turn(log, turn, v_log, max):
     log.append(turn)
     v_log.append(turn)
     
-    # pops visible turn info over 15 turns ago
+    # makes the 15 most recent turns visible in the log
     if max > 15:
         v_log.pop(0)
         
     return log, v_log
-        
-def draw_log(log, offset):
+
+# draws turns stored in log
+def draw_log(log):
     
     # sets y position for turns to be displayed
-    y = log_pos + log_height - 30 + offset
+    y = log_pos + log_height - 30
     
     for turn in reversed(log):
         text = log_font.render(turn, True, 'black')
         screen.blit(text, (log_pos + 10, y))
         y -= 20
 
-
+# draws game elements depending on scene
 def draw_game(act):
     button_list = []
     
@@ -167,9 +182,16 @@ while run:
     
     # once game is started, and cards are dealt, display board
     if active:
+        # draws user's hand at the bottom of the board
         draw_cards(players[0].hand, edge_length, WIDTH - space - card_height, False, True)
+        
+        # draws opponent's hand on the left side of the board
         draw_cards(players[2].hand, edge_length, space, False, False)
+        
+        # draws user's partner's hand at the top of the board
         draw_cards(players[1].hand, space, edge_length, True, True)
+        
+        # draws opponent's partner's hand on the right side of the board
         draw_cards(players[3].hand, WIDTH - space - card_height, edge_length, True, False)
     
     buttons = draw_game(active)
@@ -187,15 +209,15 @@ while run:
                     game_deck = copy.deepcopy(one_deck)
                     initialize_players()
                 
+        # placeholder functionality to test log
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 turn_number = len(log) + 1
-                                
+                
                 add_turn(log, f"Turn {turn_number}: [{players[0].name}] viewed [{players[0].partner.name}]'s card and guessed [{players[1].name}]'s card.", visible_log, turn_number)
-                            
-                scroll_offset = 0
-                    
-    draw_log(visible_log, scroll_offset)
+
+
+    draw_log(visible_log)
 
     pygame.display.flip()
 pygame.quit()
