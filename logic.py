@@ -30,6 +30,14 @@ card_height = 105
 space = 20
 edge_length = 150
 
+# Define game log variables
+log_pos = 175
+log_width = 500
+log_height = 320
+log = []
+visible_log = []
+scroll_offset = 0
+
 class Player:
     def __init__(self, name):
         self.name = name
@@ -37,6 +45,17 @@ class Player:
         
     def add_partner(self, player):
         self.partner = player
+        
+def initialize_players():
+    players.append(Player("A"))
+    players.append(Player("B"))
+    players.append(Player("C"))
+    players.append(Player("D"))
+    
+    players[0].add_partner(players[2])
+    players[2].add_partner(players[0])
+    players[1].add_partner(players[3])
+    players[3].add_partner(players[1])
 
 # Custom sort function
 def card_key(card):
@@ -77,13 +96,32 @@ def draw_cards(hand, x, y, vertical, order):
         # black border
         pygame.draw.rect(screen, 'black', [x, y, w, h], 5, 5)
         
-def draw_log(player, turn):
-        log_text = log_font.render(f'Turn {turn + 1}: [{player.name}] viewed [{player.partner.name}]\'s card', True, 'black')
-        screen.blit(log_text, (185, 185 + 20 * turn))
+        
+# appends turns to the logs
+def add_turn(log, turn, v_log, max):
+    log.append(turn)
+    v_log.append(turn)
+    
+    # pops visible turn info over 15 turns ago
+    if max > 15:
+        v_log.pop(0)
+        
+    return log, v_log
+        
+def draw_log(log, offset):
+    
+    # sets y position for turns to be displayed
+    y = log_pos + log_height - 30 + offset
+    
+    for turn in reversed(log):
+        text = log_font.render(turn, True, 'black')
+        screen.blit(text, (log_pos + 10, y))
+        y -= 20
 
 
 def draw_game(act):
     button_list = []
+    
     # initially on startup (not active) only option is to start game
     if not active:
         title_text = title_font.render('LOGIC', True, 'black')
@@ -97,12 +135,9 @@ def draw_game(act):
         
     # once game started, show game board and user action options
     else:
-        log = pygame.draw.rect(screen, 'white', [175, 175, 500, 300], 0, 5)
-        pygame.draw.rect(screen, 'black', [175, 175, 500, 300], 5, 5)
-        
-        for i in range(6):
-            draw_log(player1, i)
-        
+        # displays log window
+        pygame.draw.rect(screen, 'white', [log_pos, log_pos, log_width, log_height], 0, 5)
+        pygame.draw.rect(screen, 'black', [log_pos, log_pos, log_width, log_height], 5, 5)
 
     return button_list
 
@@ -132,10 +167,10 @@ while run:
     
     # once game is started, and cards are dealt, display board
     if active:
-        draw_cards(player1.hand, edge_length, WIDTH - space - card_height, False, True)
-        draw_cards(player3.hand, edge_length, space, False, False)
-        draw_cards(player2.hand, space, edge_length, True, True)
-        draw_cards(player4.hand, WIDTH - space - card_height, edge_length, True, False)
+        draw_cards(players[0].hand, edge_length, WIDTH - space - card_height, False, True)
+        draw_cards(players[2].hand, edge_length, space, False, False)
+        draw_cards(players[1].hand, space, edge_length, True, True)
+        draw_cards(players[3].hand, WIDTH - space - card_height, edge_length, True, False)
     
     buttons = draw_game(active)
     
@@ -150,18 +185,17 @@ while run:
                     active = True
                     initial_deal = True
                     game_deck = copy.deepcopy(one_deck)
-                    player1 = Player('bottom')
-                    player2 = Player('left')
-                    player3 = Player('top')
-                    player4 = Player('right')
-                    player1.add_partner(player3)
-                    player2.add_partner(player4)
-                    player3.add_partner(player1)
-                    player4.add_partner(player2)
-                    players.append(player1)
-                    players.append(player2)
-                    players.append(player3)
-                    players.append(player4)
+                    initialize_players()
+                
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                turn_number = len(log) + 1
+                                
+                add_turn(log, f"Turn {turn_number}: [{players[0].name}] viewed [{players[0].partner.name}]'s card and guessed [{players[1].name}]'s card.", visible_log, turn_number)
+                            
+                scroll_offset = 0
+                    
+    draw_log(visible_log, scroll_offset)
 
     pygame.display.flip()
 pygame.quit()
