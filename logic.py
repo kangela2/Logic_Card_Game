@@ -5,8 +5,18 @@ import pygame
 pygame.init()
 
 # game variables
-cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
-rank_order = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13}
+cards = [
+    '2', '3', '4',
+    '5', '6', '7',
+    '8', '9', '10',
+    'J', 'Q', 'K'
+    ]
+rank_order = {
+    '2': 2, '3': 3, '4': 4,
+    '5': 5, '6': 6, '7': 7,
+    '8': 8, '9': 9, '10': 10,
+    'J': 11, 'Q': 12, 'K': 13
+    }
 one_deck = 2 * cards
 WIDTH = 850
 HEIGHT = 850
@@ -19,8 +29,13 @@ title_font = pygame.font.Font('freesansbold.ttf', 80)
 log_font = pygame.font.Font('freesansbold.ttf', 18)
 active = False
 initial_deal = False
-game_deck = one_deck
 players = []
+teams = []
+
+# Define colors
+BLACK = 'black'
+WHITE = 'white'
+BACKGROUND = 'limegreen'
 
 # Define the size of each card
 card_width = 75
@@ -28,7 +43,7 @@ card_height = 105
 
 # Define the space between card
 space = 20
-edge_length = 150
+corner_length = 150
 
 # Define game log variables
 log_pos = 175
@@ -41,10 +56,46 @@ class Player:
     def __init__(self, name):
         self.name = name
         self.hand = []
+        self.idx = [0, 1, 2, 3, 4, 5]
+        self.flipped = [False, False, False, False, False, False]
         
-    def set_partner(self, player):
-        self.partner = player
+def simulate_game(turn):
+    player = players[turn%4 - 1]
+    
+    # player guesses cards of the opponent to their left
+    opponent = players[turn%4]
+    
+    # chance that the player will guess the cards of opponent to their right
+    if random.getrandbits(1):
+        opponent = players[turn%4 - 2]
+
+    x = random.randint(0, len(opponent.idx) - 1)
+    
+    index = opponent.idx[x]
+    guess = random.randint(0, len(cards) - 1)
+    
+    text = [
+        f"Turn {turn_number}:",
+        f"[{player.name}] guessed [{opponent.name}]'s",
+        f"{index+1} card as a {cards[guess]}",
+        f"{guess_card(opponent, index, cards[guess])}"
+    ]
+    
+    string = " ".join(text)
+    
+    add_turn(log, string, visible_log, turn_number)
+    
+    if opponent.flipped[index]:
+        opponent.idx.remove(index)
+        print(string)
         
+def guess_card(player, index, guess):
+    if player.hand[index] == guess:
+        player.flipped[index] = True
+        return "correctly"
+        
+    return "incorrectly"
+
 def initialize_players():
     # adds player 1 // user // bottom hand to list of players
     players.append(Player("A"))
@@ -59,36 +110,28 @@ def initialize_players():
     players.append(Player("D"))
     
     
-    # set user's partner as player 3
-    players[0].set_partner(players[2])
+    # creates the first team with players 1 & 3
+    teams.append((players[0], players[2], "Player Team"))
     
-    # set opponent's partner as player 4
-    players[2].set_partner(players[0])
+    # creates the second team with players 2 & 4
+    teams.append((players[1], players[3], "Opposing Team"))
     
-    # set player 2's partner as user
-    players[1].set_partner(players[3])
-    
-    # set player 4's partner as opponent
-    players[3].set_partner(players[1])
-
 # get key of card based on rank
 def card_key(card):
     return rank_order[card]
 
 # deal cards by selecting randomly from deck, and make function for one card at a time
 def deal_cards(current_hand, current_deck):
-    card = random.randint(0, len(current_deck))
-    current_hand.append(current_deck[card - 1])
-    current_deck.pop(card - 1)
-        
-#    print(current_hand, current_deck)
-    
+    card = random.randint(0, len(current_deck) - 1)
+    current_hand.append(current_deck[card])
+    current_deck.pop(card)
+            
     return current_hand, current_deck
 
 # draw cards visually onto screen depending on hand, x and y starting positions, whether or not they're displayed vertically, and what order the ranks should be displayed
-def draw_cards(hand, x, y, vertical, order):
+def draw_cards(player, x, y, vertical, order):
 
-    for i in range(len(hand)):
+    for i in range(len(player.hand)):
         if not vertical:
             x = 150 + (card_width + space) * i
             w = card_width
@@ -101,11 +144,29 @@ def draw_cards(hand, x, y, vertical, order):
         # white card
         pygame.draw.rect(screen, 'white', [x, y, w, h], 0, 5)
         
-        # rank
+        pos = [x + 10, y + 10]
+        
+        # display rank on cards only if card is flipped
+        if order and player.flipped[i]:
+            rank = font.render(player.hand[i], True, BLACK)
+            screen.blit(rank, pos)
+            
+        elif not order and player.flipped[5 - i]:
+            rank = font.render(player.hand[5 - i], True, BLACK)
+            screen.blit(rank, pos)
+            
+        pos = [x + 10, y - 20]
+        
+        # display debug rank
         if order:
-            screen.blit(font.render(hand[i], True, 'black'), (x + 10, y + 10))
+            rank = log_font.render(player.hand[i], True, BLACK)
+            screen.blit(rank, pos)
+
         else:
-            screen.blit(font.render(hand[5 - i], True, 'black'), (x + 10, y + 10))
+            rank = log_font.render(player.hand[5 - i], True, BLACK)
+            screen.blit(rank, pos)
+            
+#        screen.blit(rank, pos)
         
         # black border
         pygame.draw.rect(screen, 'black', [x, y, w, h], 5, 5)
@@ -129,7 +190,7 @@ def draw_log(log):
     y = log_pos + log_height - 30
     
     for turn in reversed(log):
-        text = log_font.render(turn, True, 'black')
+        text = log_font.render(turn, True, BLACK)
         screen.blit(text, (log_pos + 10, y))
         y -= 20
 
@@ -139,20 +200,32 @@ def draw_game(act):
     
     # initially on startup (not active) only option is to start game
     if not active:
-        title_text = title_font.render('LOGIC', True, 'black')
+        title_text = title_font.render('LOGIC', True, BLACK)
         screen.blit(title_text, (300, 100))
         
-        start = pygame.draw.rect(screen, 'red', [360, 400, 130, 50], 0, 5)
-        pygame.draw.rect(screen, 'green', [360, 400, 130, 50], 5, 5)
-        start_text = font.render('START', True, 'black')
+        pos = [
+            360,    # x
+            400,    # y
+            130,    # width
+            50      # height
+        ]
+        
+        # display start game button
+        start = pygame.draw.rect(screen, 'red', pos, 0, 5)
+        pygame.draw.rect(screen, 'green', pos, 5, 5)
+        start_text = font.render('START', True, BLACK)
         screen.blit(start_text, (376, 414))
+        
         button_list.append(start)
         
     # once game started, show game board and user action options
     else:
         # displays log window
-        pygame.draw.rect(screen, 'white', [log_pos, log_pos, log_width, log_height], 0, 5)
-        pygame.draw.rect(screen, 'black', [log_pos, log_pos, log_width, log_height], 5, 5)
+        pos = [log_pos, log_pos]
+        dimensions = [log_width, log_height]
+        
+        pygame.draw.rect(screen, WHITE, [pos, dimensions], 0, 5)
+        pygame.draw.rect(screen, BLACK, [pos, dimensions], 5, 5)
 
     return button_list
 
@@ -162,7 +235,7 @@ run = True
 while run:
     # run game at our framerate and fill screen with bg color
     timer.tick(fps)
-    screen.fill('limegreen')
+    screen.fill(BACKGROUND)
     
     # deal cards to players
     if initial_deal:
@@ -175,24 +248,26 @@ while run:
         # sort hands after they're all dealt
         for x in players:
             x.hand = sorted(x.hand, key = card_key)
-        
-        # prints every player's hand
-#        for i in players:
-#            print(f"{i.hand} : {i.name}")
     
     # once game is started, and cards are dealt, display board
     if active:
+        pos = [
+            corner_length,                  # offset window corner
+            WIDTH - space - card_height,    # offset card length
+            space                           # offset window edge
+        ]
+        
         # draws user's hand at the bottom of the board
-        draw_cards(players[0].hand, edge_length, WIDTH - space - card_height, False, True)
+        draw_cards(players[0], pos[0], pos[1], False, True)
         
         # draws opponent's hand on the left side of the board
-        draw_cards(players[2].hand, edge_length, space, False, False)
+        draw_cards(players[2], pos[0], pos[2], False, False)
         
         # draws user's partner's hand at the top of the board
-        draw_cards(players[1].hand, space, edge_length, True, True)
+        draw_cards(players[1], pos[2], pos[0], True, True)
         
         # draws opponent's partner's hand on the right side of the board
-        draw_cards(players[3].hand, WIDTH - space - card_height, edge_length, True, False)
+        draw_cards(players[3], pos[1], pos[0], True, False)
     
     buttons = draw_game(active)
     
@@ -213,9 +288,7 @@ while run:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 turn_number = len(log) + 1
-                
-                add_turn(log, f"Turn {turn_number}: [{players[0].name}] viewed [{players[0].partner.name}]'s card and guessed [{players[1].name}]'s card.", visible_log, turn_number)
-
+                simulate_game(turn_number)
 
     draw_log(visible_log)
 
