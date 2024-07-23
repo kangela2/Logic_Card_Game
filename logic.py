@@ -29,8 +29,10 @@ title_font = pygame.font.Font('freesansbold.ttf', 80)
 log_font = pygame.font.Font('freesansbold.ttf', 18)
 active = False
 initial_deal = False
+win = False
 players = []
 teams = []
+win_results = []
 
 # Define colors
 BLACK = 'black'
@@ -60,6 +62,7 @@ class Player:
         self.flipped = [False, False, False, False, False, False]
         
 def simulate_game(turn):
+    end = False
     player = players[turn%4 - 1]
     
     # player guesses cards of the opponent to their left
@@ -79,7 +82,7 @@ def simulate_game(turn):
         f"[{player.name}] guessed [{opponent.name}]'s",
         f"{index+1} card as a {cards[guess]}",
         f"{guess_card(opponent, index, cards[guess])}"
-    ]
+        ]
     
     string = " ".join(text)
     
@@ -87,7 +90,19 @@ def simulate_game(turn):
     
     if opponent.flipped[index]:
         opponent.idx.remove(index)
+        end = check_endgame(player, opponent, turn)
         print(string)
+    
+    return end, player, opponent
+        
+def check_endgame(player, opponent, turn):
+    if len(opponent.idx) == 0:
+        return True
+    return False
+
+#        log.clear()
+#        visible_log.clear()
+#        players.clear()
         
 def guess_card(player, index, guess):
     if player.hand[index] == guess:
@@ -130,7 +145,6 @@ def deal_cards(current_hand, current_deck):
 
 # draw cards visually onto screen depending on hand, x and y starting positions, whether or not they're displayed vertically, and what order the ranks should be displayed
 def draw_cards(player, x, y, vertical, order):
-
     for i in range(len(player.hand)):
         if not vertical:
             x = 150 + (card_width + space) * i
@@ -155,7 +169,7 @@ def draw_cards(player, x, y, vertical, order):
             rank = font.render(player.hand[5 - i], True, BLACK)
             screen.blit(rank, pos)
             
-        pos = [x + 10, y - 20]
+        pos[1] -= 30
         
         # display debug rank
         if order:
@@ -193,6 +207,51 @@ def draw_log(log):
         text = log_font.render(turn, True, BLACK)
         screen.blit(text, (log_pos + 10, y))
         y -= 20
+        
+def draw_win():
+    winning_team = ""
+    
+    winner = win_results[0]
+    loser = win_results[1]
+    turn = win_results[2]
+    
+    for i in range(len(teams)):
+        if teams[i].count(winner) > 0:
+            winning_team = teams[i][2]
+    
+    text = [
+        f"[{winner.name}] guessed [{loser.name}]'s",
+        f"final card correctly on Turn {turn}",
+        f"{winning_team} Wins!"
+    ]
+    
+    pos = [
+        log_pos,
+        log_pos + log_height + space,
+        log_width,
+        60
+        ]
+    
+    pygame.draw.rect(screen, WHITE, pos, 0, 5)
+    pygame.draw.rect(screen, BLACK, pos, 5, 5)
+    
+    pos.pop()
+    pos.pop()
+    
+    pos[0] += 10
+    pos[1] += 10
+    
+    win_text = log_font.render(text[2], True, BLACK)
+    screen.blit(win_text, pos)
+    
+    text.pop()
+    
+    pos[1] += 20
+    
+    string = " ".join(text)
+
+    win_text = log_font.render(string, True, BLACK)
+    screen.blit(win_text, pos)
 
 # draws game elements depending on scene
 def draw_game(act):
@@ -208,11 +267,12 @@ def draw_game(act):
             400,    # y
             130,    # width
             50      # height
-        ]
+            ]
         
         # display start game button
         start = pygame.draw.rect(screen, 'red', pos, 0, 5)
         pygame.draw.rect(screen, 'green', pos, 5, 5)
+        
         start_text = font.render('START', True, BLACK)
         screen.blit(start_text, (376, 414))
         
@@ -226,9 +286,11 @@ def draw_game(act):
         
         pygame.draw.rect(screen, WHITE, [pos, dimensions], 0, 5)
         pygame.draw.rect(screen, BLACK, [pos, dimensions], 5, 5)
+        
+        if win:
+            draw_win()
 
     return button_list
-
 
 # main game loop
 run = True
@@ -255,7 +317,7 @@ while run:
             corner_length,                  # offset window corner
             WIDTH - space - card_height,    # offset card length
             space                           # offset window edge
-        ]
+            ]
         
         # draws user's hand at the bottom of the board
         draw_cards(players[0], pos[0], pos[1], False, True)
@@ -281,15 +343,23 @@ while run:
                 if buttons[0].collidepoint(event.pos):
                     active = True
                     initial_deal = True
+                    win = False
                     game_deck = copy.deepcopy(one_deck)
                     initialize_players()
                 
         # placeholder functionality to test log
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                turn_number = len(log) + 1
-                simulate_game(turn_number)
-
+        if active and not win:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    turn_number = len(log) + 1
+                    win, winner, loser = simulate_game(turn_number)
+                    if win:
+                        win_results = [
+                            winner,
+                            loser,
+                            turn_number
+                            ]
+                        
     draw_log(visible_log)
 
     pygame.display.flip()
