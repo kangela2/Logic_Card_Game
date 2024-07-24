@@ -17,6 +17,8 @@ rank_order = {
     '8': 8, '9': 9, '10': 10,
     'J': 11, 'Q': 12, 'K': 13
     }
+lowest_guess = [0, 0, 1, 1, 2, 2]
+highest_guess = [9, 9, 10, 10, 11, 11]
 deck = 2 * cards
 WIDTH = 850
 HEIGHT = 850
@@ -63,12 +65,12 @@ class Player:
         self.flipped = [False, False, False, False, False, False]
         
 def simulate_loop():
-    i = 0
+    turn = 1
     w = False
     
     while not w:
-        i += 1
-        w, winner, loser = simulate_game(i)
+        w, winner, loser = simulate_game(turn)
+        turn += 1
         
     return w, winner, loser
         
@@ -86,7 +88,7 @@ def simulate_game(turn):
     x = random.randint(0, len(opponent.idx) - 1)
     
     index = opponent.idx[x]
-    guess = random.randint(0, len(cards) - 1)
+    guess = random.randint(lowest_guess[index], highest_guess[index])
     
     text = [
         f"Turn {turn}:",
