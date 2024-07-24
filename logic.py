@@ -51,8 +51,8 @@ space = 20
 corner_length = 150
 
 # Define game log variables
-log_pos = 145
-log_width = 560
+log_pos = 150
+log_width = 550
 log_height = 320
 log = []
 visible_log = []
@@ -164,11 +164,11 @@ def deal_cards(current_hand, current_deck):
 def draw_cards(player, x, y, vertical, order):
     for i in range(len(player.hand)):
         if not vertical:
-            x = 150 + (card_width + space) * i
+            x = corner_length + (card_width + space) * i
             w = card_width
             h = card_height
         else:
-            y = 150 + (card_width + space) * i
+            y = corner_length + (card_width + space) * i
             w = card_height
             h = card_width
         
@@ -207,7 +207,7 @@ def add_turn(log, turn, v_log, max):
 def draw_log(log):
     
     # sets y position for turns to be displayed
-    y = log_pos + log_height - 25
+    y = log_pos + log_height - 30
     
     for turn in reversed(log):
         text = log_font.render(turn, True, BLACK)
@@ -233,7 +233,7 @@ def draw_win():
     
     pos = [
         log_pos,
-        log_pos + log_height + space,
+        log_pos + log_height + 15,
         log_width,
         120
         ]
@@ -241,7 +241,7 @@ def draw_win():
     pygame.draw.rect(screen, WHITE, pos, 0, 5)
     pygame.draw.rect(screen, BLACK, pos, 5, 5)
     
-    pos[0] += 90
+    pos[0] += 85
     pos[1] += 65
     pos[2] = 150
     pos[3] = 42
@@ -262,7 +262,7 @@ def draw_win():
     
     pos = [
         log_pos + 10,
-        log_pos + log_height + space + 10,
+        log_pos + log_height + 25,
         ]
     
     win_text = button_font.render(text[2], True, BLACK)
@@ -278,6 +278,18 @@ def draw_win():
     screen.blit(win_text, pos)
     
     return exit, play
+    
+def draw_buttons():
+    for rank in cards:
+        pos = [
+            log_pos,
+            log_pos + log_height + space,
+            log_width,
+            120
+            ]
+        
+        pygame.draw.rect(screen, WHITE, pos, 0, 5)
+        pygame.draw.rect(screen, BLACK, pos, 5, 5)
 
 # draws game elements depending on scene
 def draw_game(act):
@@ -307,7 +319,7 @@ def draw_game(act):
     # once game started, show game board and user action options
     else:
         # displays log window
-        pos = [log_pos, corner_length]
+        pos = [log_pos, log_pos]
         dimensions = [log_width, log_height]
         
         pygame.draw.rect(screen, WHITE, [pos, dimensions], 0, 5)
