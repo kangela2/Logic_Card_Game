@@ -181,19 +181,7 @@ def draw_cards(player, x, y, vertical, order):
             screen.blit(rank, pos)
             
         pos[1] -= 30
-        
-        # display debug rank
-#        if order:
-#            rank = log_font.render(player.hand[i], True, BLACK)
-#            screen.blit(rank, pos)
-#
-#        else:
-#            rank = log_font.render(player.hand[5 - i], True, BLACK)
-#            screen.blit(rank, pos)
-            
-#        screen.blit(rank, pos)
-        
-        # black border
+
         pygame.draw.rect(screen, 'black', [x, y, w, h], 5, 5)
         
         
@@ -324,6 +312,18 @@ def draw_game(act):
             button_list.append(play)
 
     return button_list
+
+# New Classes
+class Card:
+    def __init__(self, rank):
+        self.rank = rank
+        self.value = rank_order[rank]
+        self.flipped = False
+
+    def guess(opp_guess):
+        if (opp_guess == Card.rank):
+            self.flipped = True
+        
 
 # main game loop
 run = True
