@@ -144,14 +144,13 @@ def initialize_players():
     
 # get key of card based on rank
 def card_key(card):
-    return rank_order[card]
+    return card.value
 
 # deal cards by selecting randomly from deck, and make function for one card at a time
 def deal_cards(current_hand, current_deck):
-    card = random.randint(0, len(current_deck) - 1)
-    newCard = Card(card)
-    current_hand.append(newCard)
-    current_deck.pop(card)
+    card_index = random.randint(0, len(current_deck) - 1)
+    new_card = current_deck.pop(card_index)
+    current_hand.append(Card(new_card))
             
     return current_hand, current_deck
 
