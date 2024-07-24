@@ -146,6 +146,10 @@ def initialize_players():
 def card_key(card):
     return rank_order[card]
 
+def clear_logs():
+    log.clear()
+    visible_log.clear()
+
 # deal cards by selecting randomly from deck, and make function for one card at a time
 def deal_cards(current_hand, current_deck):
     card = random.randint(0, len(current_deck) - 1)
@@ -181,17 +185,6 @@ def draw_cards(player, x, y, vertical, order):
             screen.blit(rank, pos)
             
         pos[1] -= 30
-        
-        # display debug rank
-#        if order:
-#            rank = log_font.render(player.hand[i], True, BLACK)
-#            screen.blit(rank, pos)
-#
-#        else:
-#            rank = log_font.render(player.hand[5 - i], True, BLACK)
-#            screen.blit(rank, pos)
-            
-#        screen.blit(rank, pos)
         
         # black border
         pygame.draw.rect(screen, 'black', [x, y, w, h], 5, 5)
@@ -383,15 +376,14 @@ while run:
             if win:
                 if buttons[0].collidepoint(event.pos):
                     active = False
+                    clear_logs()
+                    
                 elif buttons[1].collidepoint(event.pos):
                     win = False
                     initial_deal = True
                     game_deck = copy.deepcopy(deck)
                     initialize_players()
-                
-                log.clear()
-                visible_log.clear()
-                
+                    clear_logs()
                 
         # placeholder functionality to test log
         if active and not win:
