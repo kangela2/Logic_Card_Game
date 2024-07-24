@@ -149,7 +149,8 @@ def card_key(card):
 # deal cards by selecting randomly from deck, and make function for one card at a time
 def deal_cards(current_hand, current_deck):
     card = random.randint(0, len(current_deck) - 1)
-    current_hand.append(current_deck[card])
+    newCard = Card(card)
+    current_hand.append(newCard)
     current_deck.pop(card)
             
     return current_hand, current_deck
