@@ -17,7 +17,7 @@ rank_order = {
     '8': 8, '9': 9, '10': 10,
     'J': 11, 'Q': 12, 'K': 13
     }
-one_deck = 2 * cards
+deck = 2 * cards
 WIDTH = 850
 HEIGHT = 850
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
@@ -27,6 +27,7 @@ timer = pygame.time.Clock()
 font = pygame.font.Font('freesansbold.ttf', 30)
 title_font = pygame.font.Font('freesansbold.ttf', 80)
 log_font = pygame.font.Font('freesansbold.ttf', 18)
+button_font = pygame.font.Font('freesansbold.ttf', 24)
 active = False
 initial_deal = False
 win = False
@@ -61,6 +62,16 @@ class Player:
         self.idx = [0, 1, 2, 3, 4, 5]
         self.flipped = [False, False, False, False, False, False]
         
+def simulate_loop():
+    i = 0
+    w = False
+    
+    while not w:
+        i += 1
+        w, winner, loser = simulate_game(i)
+        
+    return w, winner, loser
+        
 def simulate_game(turn):
     end = False
     player = players[turn%4 - 1]
@@ -78,7 +89,7 @@ def simulate_game(turn):
     guess = random.randint(0, len(cards) - 1)
     
     text = [
-        f"Turn {turn_number}:",
+        f"Turn {turn}:",
         f"[{player.name}] guessed [{opponent.name}]'s",
         f"{index+1} card as a {cards[guess]}",
         f"{guess_card(opponent, index, cards[guess])}"
@@ -86,12 +97,12 @@ def simulate_game(turn):
     
     string = " ".join(text)
     
-    add_turn(log, string, visible_log, turn_number)
+    add_turn(log, string, visible_log, turn)
     
     if opponent.flipped[index]:
         opponent.idx.remove(index)
         end = check_endgame(player, opponent, turn)
-        print(string)
+#        print(string)
     
     return end, player, opponent
         
@@ -99,10 +110,6 @@ def check_endgame(player, opponent, turn):
     if len(opponent.idx) == 0:
         return True
     return False
-
-#        log.clear()
-#        visible_log.clear()
-#        players.clear()
         
 def guess_card(player, index, guess):
     if player.hand[index] == guess:
@@ -112,6 +119,10 @@ def guess_card(player, index, guess):
     return "incorrectly"
 
 def initialize_players():
+    # clear previous players if any
+    if len(players) > 0:
+        players.clear()
+        
     # adds player 1 // user // bottom hand to list of players
     players.append(Player("A"))
     
@@ -172,13 +183,13 @@ def draw_cards(player, x, y, vertical, order):
         pos[1] -= 30
         
         # display debug rank
-        if order:
-            rank = log_font.render(player.hand[i], True, BLACK)
-            screen.blit(rank, pos)
-
-        else:
-            rank = log_font.render(player.hand[5 - i], True, BLACK)
-            screen.blit(rank, pos)
+#        if order:
+#            rank = log_font.render(player.hand[i], True, BLACK)
+#            screen.blit(rank, pos)
+#
+#        else:
+#            rank = log_font.render(player.hand[5 - i], True, BLACK)
+#            screen.blit(rank, pos)
             
 #        screen.blit(rank, pos)
         
@@ -229,29 +240,49 @@ def draw_win():
         log_pos,
         log_pos + log_height + space,
         log_width,
-        60
+        120
         ]
     
     pygame.draw.rect(screen, WHITE, pos, 0, 5)
     pygame.draw.rect(screen, BLACK, pos, 5, 5)
     
-    pos.pop()
-    pos.pop()
+    pos[0] += 75
+    pos[1] += 65
+    pos[2] = 150
+    pos[3] = 42
     
-    pos[0] += 10
-    pos[1] += 10
+    exit = pygame.draw.rect(screen, 'red', pos, 0, 5)
+    pygame.draw.rect(screen, BLACK, pos, 5, 5)
     
-    win_text = log_font.render(text[2], True, BLACK)
+    exit_text = button_font.render('Exit Game', True, BLACK)
+    screen.blit(exit_text, (pos[0] + 10, pos[1] + 10))
+    
+    pos[0] += pos[2] + 50
+    
+    play = pygame.draw.rect(screen, 'green', pos, 0, 5)
+    pygame.draw.rect(screen, BLACK, pos, 5, 5)
+    
+    play_text = button_font.render('Play Again', True, BLACK)
+    screen.blit(play_text, (pos[0] + 10, pos[1] + 10))
+    
+    pos = [
+        log_pos + 10,
+        log_pos + log_height + space + 10,
+        ]
+    
+    win_text = button_font.render(text[2], True, BLACK)
     screen.blit(win_text, pos)
     
     text.pop()
     
-    pos[1] += 20
+    pos[1] += 30
     
     string = " ".join(text)
 
     win_text = log_font.render(string, True, BLACK)
     screen.blit(win_text, pos)
+    
+    return exit, play
 
 # draws game elements depending on scene
 def draw_game(act):
@@ -274,7 +305,7 @@ def draw_game(act):
         pygame.draw.rect(screen, 'green', pos, 5, 5)
         
         start_text = font.render('START', True, BLACK)
-        screen.blit(start_text, (376, 414))
+        screen.blit(start_text, (pos[0] + 16, pos[1] + 14))
         
         button_list.append(start)
         
@@ -288,7 +319,9 @@ def draw_game(act):
         pygame.draw.rect(screen, BLACK, [pos, dimensions], 5, 5)
         
         if win:
-            draw_win()
+            exit, play = draw_win()
+            button_list.append(exit)
+            button_list.append(play)
 
     return button_list
 
@@ -341,23 +374,41 @@ while run:
         if event.type == pygame.MOUSEBUTTONUP:
             if not active:
                 if buttons[0].collidepoint(event.pos):
+                    win = False
                     active = True
                     initial_deal = True
-                    win = False
-                    game_deck = copy.deepcopy(one_deck)
+                    game_deck = copy.deepcopy(deck)
                     initialize_players()
+                    
+            if win:
+                if buttons[0].collidepoint(event.pos):
+                    active = False
+                elif buttons[1].collidepoint(event.pos):
+                    win = False
+                    initial_deal = True
+                    game_deck = copy.deepcopy(deck)
+                    initialize_players()
+                
+                log.clear()
+                visible_log.clear()
+                
                 
         # placeholder functionality to test log
         if active and not win:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     turn_number = len(log) + 1
-                    win, winner, loser = simulate_game(turn_number)
+                    
+                    win, winner, loser = simulate_loop()
+                    
+#                    win, winner, loser = simulate_game(turn_number)
+
                     if win:
                         win_results = [
                             winner,
                             loser,
-                            turn_number
+                            len(log)
+#                            turn_number
                             ]
                         
     draw_log(visible_log)
