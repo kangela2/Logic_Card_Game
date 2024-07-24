@@ -51,8 +51,8 @@ space = 20
 corner_length = 150
 
 # Define game log variables
-log_pos = 175
-log_width = 500
+log_pos = 145
+log_width = 560
 log_height = 320
 log = []
 visible_log = []
@@ -173,7 +173,7 @@ def draw_cards(player, x, y, vertical, order):
             h = card_width
         
         # white card
-        pygame.draw.rect(screen, 'white', [x, y, w, h], 0, 5)
+        pygame.draw.rect(screen, WHITE, [x, y, w, h], 0, 5)
         
         pos = [x + 10, y + 10]
         
@@ -189,7 +189,7 @@ def draw_cards(player, x, y, vertical, order):
         pos[1] -= 30
         
         # black border
-        pygame.draw.rect(screen, 'black', [x, y, w, h], 5, 5)
+        pygame.draw.rect(screen, BLACK, [x, y, w, h], 5, 5)
         
         
 # appends turns to the logs
@@ -207,7 +207,7 @@ def add_turn(log, turn, v_log, max):
 def draw_log(log):
     
     # sets y position for turns to be displayed
-    y = log_pos + log_height - 30
+    y = log_pos + log_height - 25
     
     for turn in reversed(log):
         text = log_font.render(turn, True, BLACK)
@@ -241,7 +241,7 @@ def draw_win():
     pygame.draw.rect(screen, WHITE, pos, 0, 5)
     pygame.draw.rect(screen, BLACK, pos, 5, 5)
     
-    pos[0] += 75
+    pos[0] += 90
     pos[1] += 65
     pos[2] = 150
     pos[3] = 42
@@ -252,7 +252,7 @@ def draw_win():
     exit_text = button_font.render('Exit Game', True, BLACK)
     screen.blit(exit_text, (pos[0] + 10, pos[1] + 10))
     
-    pos[0] += pos[2] + 50
+    pos[0] += pos[2] + 80
     
     play = pygame.draw.rect(screen, 'green', pos, 0, 5)
     pygame.draw.rect(screen, BLACK, pos, 5, 5)
@@ -307,7 +307,7 @@ def draw_game(act):
     # once game started, show game board and user action options
     else:
         # displays log window
-        pos = [log_pos, log_pos]
+        pos = [log_pos, corner_length]
         dimensions = [log_width, log_height]
         
         pygame.draw.rect(screen, WHITE, [pos, dimensions], 0, 5)
