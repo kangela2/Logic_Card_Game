@@ -280,12 +280,15 @@ def draw_win():
     return exit, play
     
 def draw_buttons():
-    for rank in cards:
+    offset = 0
+    for i in range(12):
+        if i > 5:
+            offset = 45
         pos = [
-            log_pos,
-            log_pos + log_height + space,
-            log_width,
-            120
+            log_pos + (card_width + 20) * (i % 6),
+            620 + offset,
+            75,
+            35
             ]
         
         pygame.draw.rect(screen, WHITE, pos, 0, 5)
@@ -324,6 +327,8 @@ def draw_game(act):
         
         pygame.draw.rect(screen, WHITE, [pos, dimensions], 0, 5)
         pygame.draw.rect(screen, BLACK, [pos, dimensions], 5, 5)
+        
+        draw_buttons()
         
         if win:
             exit, play = draw_win()
