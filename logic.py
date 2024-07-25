@@ -77,6 +77,7 @@ def simulate_loop():
 def simulate_game(turn):
     end = False
     player = players[turn%4 - 1]
+    color = BLACK
     
     # player guesses cards of the opponent to their left
     opponent = players[turn%4]
@@ -99,11 +100,14 @@ def simulate_game(turn):
     
     string = " ".join(text)
     
-    add_turn(log, string, visible_log, turn)
+    
     
     if opponent.flipped[index]:
         opponent.idx.remove(index)
         end = check_endgame(player, opponent, turn)
+        color = 'forestgreen'
+        
+    add_turn(log, string, visible_log, turn, color)
 #        print(string)
     
     return end, player, opponent
@@ -193,9 +197,9 @@ def draw_cards(player, x, y, vertical, order):
         
         
 # appends turns to the logs
-def add_turn(log, turn, v_log, max):
+def add_turn(log, turn, v_log, max, color):
     log.append(turn)
-    v_log.append(turn)
+    v_log.append((turn, color))
     
     # makes the 15 most recent turns visible in the log
     if max > 15:
@@ -209,8 +213,8 @@ def draw_log(log):
     # sets y position for turns to be displayed
     y = log_pos + log_height - 30
     
-    for turn in reversed(log):
-        text = log_font.render(turn, True, BLACK)
+    for x in reversed(log):
+        text = log_font.render(x[0], True, x[1])
         screen.blit(text, (log_pos + 10, y))
         y -= 20
         
@@ -280,6 +284,8 @@ def draw_win():
     return exit, play
     
 def draw_buttons():
+    button_list = []
+    
     offset = 0
     for i in range(12):
         if i > 5:
@@ -291,8 +297,15 @@ def draw_buttons():
             35
             ]
         
-        pygame.draw.rect(screen, WHITE, pos, 0, 5)
+        button = pygame.draw.rect(screen, WHITE, pos, 0, 5)
         pygame.draw.rect(screen, BLACK, pos, 5, 5)
+        
+        rank = button_font.render(cards[i], True, BLACK)
+        screen.blit(rank, (pos[0] + 30, pos[1] + 6))
+        
+        button_list.append(button, card[i])
+        
+    return button_list
 
 # draws game elements depending on scene
 def draw_game(act):
@@ -328,7 +341,7 @@ def draw_game(act):
         pygame.draw.rect(screen, WHITE, [pos, dimensions], 0, 5)
         pygame.draw.rect(screen, BLACK, [pos, dimensions], 5, 5)
         
-        draw_buttons()
+#        rank_buttons = draw_buttons()
         
         if win:
             exit, play = draw_win()
@@ -403,6 +416,11 @@ while run:
                     game_deck = copy.deepcopy(deck)
                     initialize_players()
                     clear_logs()
+                    
+#                for button in rank_buttons:
+#                    if button[0].collidepoint(event.pos):
+                        
+                        
                 
         # placeholder functionality to test log
         if active and not win:
@@ -410,16 +428,16 @@ while run:
                 if event.key == pygame.K_SPACE:
                     turn_number = len(log) + 1
                     
-                    win, winner, loser = simulate_loop()
+#                    win, winner, loser = simulate_loop()
                     
-#                    win, winner, loser = simulate_game(turn_number)
+                    win, winner, loser = simulate_game(turn_number)
 
                     if win:
                         win_results = [
                             winner,
                             loser,
-                            len(log)
-#                            turn_number
+#                            len(log)
+                            turn_number
                             ]
                         
     draw_log(visible_log)
