@@ -20,10 +20,11 @@ cards = [2, 2,
 
 # Logic Classes
 class Card:
-    def __init__(self, value, card_type='horizontal'):
+    def __init__(self, value, card_type='horizontal', position = [],  parent = 'Bot'):
         self.value = value
         self.flipped = False
         self.card_type = card_type
+        self.position = position
 
 class Player:
     def __init__(self, name):
@@ -33,7 +34,7 @@ class Player:
     def display_hand(self):
         print(self.name)
         for x in self.hand:
-            print(x.value)
+            print(x.position)
 
     def sort_hand(self):
         self.hand.sort(key=lambda card: card.value)
@@ -51,7 +52,7 @@ class Player:
                 x = start_x
                 y = start_y + i * (card_height + spacing)
             
-            pygame.draw.rect(screen, 'white', (x, y, card_width, card_height))
+            card.position = pygame.draw.rect(screen, 'white', (x, y, card_width, card_height))
             
             # Only display the value if the card is flipped
             if card.flipped:
@@ -88,6 +89,10 @@ class Game:
                     p.hand.append(new_card)
 
     def start_game(self):
+        for card in self.players[1].hand: # Opponent Card Flipped Onclick
+            if event.type == pygame.MOUSEBUTTONUP and card.position.collidepoint(event.pos):
+                card.flipped = True
+
         return True
     
 # Running PyGame
@@ -135,13 +140,12 @@ while run:
 
         New_Game.deal_cards(cards)
 
+        for player in New_Game.players:
+            player.sort_hand()  # Sort the player's hand
+
         # Flip User's cards after dealing
         for card in user_player.hand:
             card.flipped = True
-
-        for player in New_Game.players:
-            player.sort_hand()  # Sort the player's hand
-            player.display_hand()
 
         dealing = False  # Set to False to avoid redealing and printing
 
@@ -151,6 +155,9 @@ while run:
         New_Game.players[1].draw_cards(screen, 100, 25)  # Partner
         New_Game.players[2].draw_cards(screen, 25, 150)   # Bot 1
         New_Game.players[3].draw_cards(screen, 650, 150)  # Bot 2
+
+        # for player in New_Game.players:
+        #     player.display_hand()
 
         New_Game.start_game()
 
