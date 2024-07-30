@@ -20,27 +20,40 @@ cards = [2, 2,
 
 # Logic Classes
 class Card:
-    def __init__(self, value):
+    def __init__(self, value, card_type='horizontal'):
         self.value = value
         self.flipped = False
-  
+        self.card_type = card_type
+
 class Player:
-    def __init__(self, name, type):
+    def __init__(self, name):
         self.name = name
         self.hand = []
-        self.type = type
 
     def display_hand(self):
         print(self.name)
         for x in self.hand:
             print(x.value)
 
-    def draw_cards(self, position):
+    def sort_hand(self):
+        self.hand.sort(key=lambda card: card.value)
 
-        if self.type == 'user':
-            pygame.draw.rect(screen, 'white', [150 + 75, 75, 100, 75], 0, 5)
+    def draw_cards(self, screen, start_x, start_y):
+        card_width = 50
+        card_height = 70
+        spacing = 10
 
-        return True
+        for i, card in enumerate(self.hand):
+            if card.card_type == 'horizontal':
+                x = start_x + i * (card_width + spacing)
+                y = start_y
+            else:  # vertical
+                x = start_x
+                y = start_y + i * (card_height + spacing)
+            
+            pygame.draw.rect(screen, 'white', (x, y, card_width, card_height))
+            value_text = font.render(str(card.value), True, 'black')
+            screen.blit(value_text, (x + 10, y + 10))
 
 class Game:
     def __init__(self, name):
@@ -53,27 +66,27 @@ class Game:
     def deal_cards(self, card_list: list[int]):
         deck = copy.deepcopy(card_list)
         num_players = len(self.players)
+        cards_per_player = 6
 
-        for i in range(6):
+        for _ in range(cards_per_player):
             for p in self.players:
                 if len(deck) > 0:
                     card_index = random.randint(0, len(deck) - 1)
                     card_element = deck.pop(card_index)
-                    p.hand.append(Card(card_element))
-        
-        for p in self.players:
-            p.hand.sort(key=lambda card: card.value)
+                    if p.name in ['Bot 1', 'Bot 2']:
+                        p.hand.append(Card(card_element, card_type='vertical'))
+                    else:
+                        p.hand.append(Card(card_element))
 
     def start_game(self):
-        for p in self.players:
-            p.draw_cards(100)
+        return True
     
 # Running PyGame
 screen = pygame.display.set_mode([850, 850])
 font = pygame.font.Font('freesansbold.ttf', 30)
 
 active = True
-dealing = False  # Flag to indicate if the game has started
+game_started = False  # Flag to indicate if the game has started
 run = True
 while run:
     # PyGame Display Settings
@@ -96,21 +109,29 @@ while run:
 
         if event.type == pygame.MOUSEBUTTONUP and start.collidepoint(event.pos):
             active = False
-            dealing = True
-            
-    New_Game = Game('New Game')
-    if dealing: # Initialize Players and Deal Cards
-        New_Game.players.append(Player('User', 'user'))
-        New_Game.players.append(Player('Partner', 'partner'))
-        New_Game.players.append(Player('Bot 1', 'bot'))
-        New_Game.players.append(Player('Bot 2', 'bot'))
+            game_started = True
+
+    if game_started: # Initialize Players and Deal Cards
+        New_Game = Game('New Game')
+        New_Game.players.append(Player('User'))
+        New_Game.players.append(Player('Partner'))
+        New_Game.players.append(Player('Bot 1'))
+        New_Game.players.append(Player('Bot 2'))
 
         New_Game.deal_cards(cards)
 
         for player in New_Game.players:
+            player.sort_hand()  # Sort the player's hand
             player.display_hand()
 
-        dealing = False  # Set to False to avoid redealing and printing
+        game_started = False  # Set to False to avoid redealing and printing
+
+    if not active:
+        # Draw cards for each player
+        New_Game.players[0].draw_cards(screen, 100, 700)   # User
+        New_Game.players[1].draw_cards(screen, 100, 100)  # Partner
+        New_Game.players[2].draw_cards(screen, 50, 200)  # Bot 1
+        New_Game.players[3].draw_cards(screen, 500, 200) # Bot 2
 
     pygame.display.flip()
 pygame.quit()
