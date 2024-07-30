@@ -96,7 +96,7 @@ screen = pygame.display.set_mode([screen_width, screen_height])
 font = pygame.font.Font('freesansbold.ttf', 30)
 
 active = True
-game_started = False  # Flag to indicate if the game has started
+dealing = False  # Flag to indicate if the game has started
 run = True
 while run:
     # PyGame Display Settings
@@ -123,9 +123,9 @@ while run:
 
         if event.type == pygame.MOUSEBUTTONUP and start.collidepoint(event.pos):
             active = False
-            game_started = True
+            dealing = True
 
-    if game_started: # Initialize Players and Deal Cards
+    if dealing: # Initialize Players and Deal Cards
         New_Game = Game('New Game')
         user_player = Player('User')
         New_Game.players.append(user_player)
@@ -143,7 +143,7 @@ while run:
             player.sort_hand()  # Sort the player's hand
             player.display_hand()
 
-        game_started = False  # Set to False to avoid redealing and printing
+        dealing = False  # Set to False to avoid redealing and printing
 
     if not active:
         # Draw cards for each player
@@ -151,6 +151,8 @@ while run:
         New_Game.players[1].draw_cards(screen, 100, 25)  # Partner
         New_Game.players[2].draw_cards(screen, 25, 150)   # Bot 1
         New_Game.players[3].draw_cards(screen, 650, 150)  # Bot 2
+
+        New_Game.start_game()
 
     pygame.display.flip()
 pygame.quit()
