@@ -20,7 +20,7 @@ cards = [2, 2,
 
 # Logic Classes
 class Card:
-    def __init__(self, value, card_type='horizontal', position = [],  parent = 'Bot'):
+    def __init__(self, value, card_type='horizontal', position = []):
         self.value = value
         self.flipped = False
         self.card_type = card_type
@@ -155,9 +155,6 @@ while run:
         New_Game.players[1].draw_cards(screen, 100, 25)  # Partner
         New_Game.players[2].draw_cards(screen, 25, 150)   # Bot 1
         New_Game.players[3].draw_cards(screen, 650, 150)  # Bot 2
-
-        # for player in New_Game.players:
-        #     player.display_hand()
 
         New_Game.start_game()
 
