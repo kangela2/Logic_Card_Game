@@ -41,6 +41,10 @@ win_results = []
 BLACK = 'black'
 WHITE = 'white'
 BACKGROUND = 'limegreen'
+CORRECT = 'forestgreen'
+
+# DEBUG bool determines whether or not to print debug statements to terminal
+DEBUG = True
 
 # Define the size of each card
 card_width = 75
@@ -76,7 +80,11 @@ def simulate_loop():
         
 def simulate_game(turn):
     end = False
+    
+    # sets current player depedning on turn
     player = players[turn%4 - 1]
+    
+    # sets turn color to black
     color = BLACK
     
     # player guesses cards of the opponent to their left
@@ -85,10 +93,14 @@ def simulate_game(turn):
     # chance that the player will guess the cards of opponent to their right
     if random.getrandbits(1):
         opponent = players[turn%4 - 2]
-
+    
+    # generates a random index from opponent's facedown cards
     x = random.randint(0, len(opponent.idx) - 1)
     
+    # sets the index of the opponent's card that the player will guess
     index = opponent.idx[x]
+    
+    # randomly chooses which card rank to guess from valid options
     guess = random.randint(lowest_guess[index], highest_guess[index])
     
     text = [
@@ -100,20 +112,20 @@ def simulate_game(turn):
     
     string = " ".join(text)
     
-    
-    
     if opponent.flipped[index]:
         opponent.idx.remove(index)
-        end = check_endgame(player, opponent, turn)
-        color = 'forestgreen'
+        end = check_endgame(opponent)
+        color = CORRECT
         
-    add_turn(log, string, visible_log, turn, color)
-#        print(string)
+        if DEBUG:
+            print(string)
+        
+    add_turn(string, turn, color)
     
     return end, player, opponent
         
-def check_endgame(player, opponent, turn):
-    if len(opponent.idx) == 0:
+def check_endgame(player):
+    if len(player.idx) == 0:
         return True
     return False
         
@@ -190,22 +202,33 @@ def draw_cards(player, x, y, vertical, order):
             rank = font.render(player.hand[5 - i], True, BLACK)
             screen.blit(rank, pos)
             
-        pos[1] -= 30
+        if DEBUG:
+            # update y pos for debug rank
+            pos[1] -= 28
+            
+            # display debug ranks
+            if order:
+                rank = player.hand[i]
+                rank_text = log_font.render(rank, True, BLACK)
+                screen.blit(rank_text, pos)
+                
+            else:
+                rank = player.hand[5 - i]
+                rank_text = log_font.render(rank, True, BLACK)
+                screen.blit(rank_text, pos)
         
         # black border
         pygame.draw.rect(screen, BLACK, [x, y, w, h], 5, 5)
         
         
 # appends turns to the logs
-def add_turn(log, turn, v_log, max, color):
-    log.append(turn)
-    v_log.append((turn, color))
+def add_turn(string, turn, color):
+    log.append(string)
+    visible_log.append((string, color))
     
     # makes the 15 most recent turns visible in the log
-    if max > 15:
-        v_log.pop(0)
-        
-    return log, v_log
+    if turn > 15:
+        visible_log.pop(0)
 
 # draws turns stored in log
 def draw_log(log):
