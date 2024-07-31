@@ -1,6 +1,7 @@
 import copy
 import random
 import pygame
+import time
 
 pygame.init()
 
@@ -68,10 +69,15 @@ class Player:
                 value_text = str(card.value)
                 value_rendered = font.render(value_text, True, 'red' if card.flipped else 'black')
                 screen.blit(value_rendered, (x + 10, y + 10))
+            elif card.flipped == 'User View':
+                value_text = str(card.value)
+                value_rendered = font.render(value_text, True, 'blue')
+                screen.blit(value_rendered, (x + 10, y + 10))
             elif card.flipped:
                 value_text = str(card.value)
                 value_rendered = font.render(value_text, True, 'red')
                 screen.blit(value_rendered, (x + 10, y + 10))
+
 
 class Game:
     def __init__(self, name):
@@ -95,7 +101,7 @@ class Game:
                     p.hand.append(new_card)
 
     def enable_game_log(self):
-        pygame.draw.rect(screen, 'green', (150, 200, 450, 600)) #x, y
+        pygame.draw.rect(screen, 'green', (150, 200, 450, 600)) # x, y
 
         return True
 
@@ -106,21 +112,33 @@ class Game:
 
         for i, card in enumerate(self.players[1].hand): # Opponent Card Flipped Onclick
             if event.type == pygame.MOUSEBUTTONUP and card.position.collidepoint(event.pos):
-                # print("Partner card at position ", i + 1)
-                card.flipped = True
-                
+                if not card.flipped:
+                    card.flipped = 'User View'
         for card in [self.players[2].hand + self.players[3].hand]:
             for c in card:
                 if event.type == pygame.MOUSEBUTTONUP and c.position.collidepoint(event.pos):
                     user_guess = input('Guess: ')
-                    if user_guess == c.value:
+                    if user_guess == str(c.value):
                         print('Correct!')
                         c.flipped = True
                     else:
-                        user_card_idx = random.randint(0, len(self.players[0].hand) - 1)
-                        random_card = self.players[0].hand[user_card_idx]
+                        random_player = self.players[random.randint(0, 1)]
+                        random_idx = random.randint(0, len(random_player.hand) - 1)
+                        random_card = random_player.hand[random_idx]
+
+                        # while random_card.flipped:
+                        #     random_player = self.players[random.randint(0, 1)]
+                        #     random_idx = random.randint(0, len(random_player.hand) - 1)
+                        #     random_card = random_player.hand[random_idx]
+
                         random_card.flipped = True
-                        print("Wrong, your card ", random_card, "is now visible!")
+                        print("Wrong",  random_player.name, "'s card", random_card.value, "is now visible!")
+
+                        if all(u.flipped for u in self.players[0].hand):
+                            print('You lost!')
+                if all(a.flipped for a in self.players[2].hand) or all(b.flipped for b in self.players[3].hand):
+                    print('You won!') # Guess all cards for either bot
+
     
 # Running PyGame
 screen_width, screen_height = 750, 1050
