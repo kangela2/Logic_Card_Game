@@ -64,9 +64,13 @@ class Player:
             card.position = pygame.draw.rect(screen, 'white', (x, y, card_width, card_height))
         
             # Only display the value if the card is flipped or if User
-            if card.flipped or self.name == 'User':
+            if self.name == 'User':
                 value_text = str(card.value)
-                value_rendered = font.render(value_text, True, 'black')
+                value_rendered = font.render(value_text, True, 'red' if card.flipped else 'black')
+                screen.blit(value_rendered, (x + 10, y + 10))
+            elif card.flipped:
+                value_text = str(card.value)
+                value_rendered = font.render(value_text, True, 'red')
                 screen.blit(value_rendered, (x + 10, y + 10))
 
 class Game:
@@ -90,13 +94,21 @@ class Game:
                     new_card = Card(card_element, card_type='vertical' if p.name in ['Bot 1', 'Bot 2'] else 'horizontal')
                     p.hand.append(new_card)
 
+    def enable_game_log(self):
+        pygame.draw.rect(screen, 'green', (150, 200, 450, 600)) #x, y
+
+        return True
+
     def start_game(self):
         # Support for Turns
-        
-        for card in self.players[1].hand: # Opponent Card Flipped Onclick
-            if event.type == pygame.MOUSEBUTTONUP and card.position.collidepoint(event.pos):
-                card.flipped = True
 
+        self.enable_game_log()
+
+        for i, card in enumerate(self.players[1].hand): # Opponent Card Flipped Onclick
+            if event.type == pygame.MOUSEBUTTONUP and card.position.collidepoint(event.pos):
+                # print("Partner card at position ", i + 1)
+                card.flipped = True
+                
         for card in [self.players[2].hand + self.players[3].hand]:
             for c in card:
                 if event.type == pygame.MOUSEBUTTONUP and c.position.collidepoint(event.pos):
@@ -106,7 +118,8 @@ class Game:
                         c.flipped = True
                     else:
                         user_card_idx = random.randint(0, len(self.players[0].hand) - 1)
-                        random_card = self.players[0].hand[user_card_idx].value
+                        random_card = self.players[0].hand[user_card_idx]
+                        random_card.flipped = True
                         print("Wrong, your card ", random_card, "is now visible!")
     
 # Running PyGame
