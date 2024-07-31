@@ -62,7 +62,7 @@ class Player:
                 y = start_y + i * (card_height + spacing)
             
             card.position = pygame.draw.rect(screen, 'white', (x, y, card_width, card_height))
-            
+        
             # Only display the value if the card is flipped or if User
             if card.flipped or self.name == 'User':
                 value_text = str(card.value)
@@ -91,6 +91,8 @@ class Game:
                     p.hand.append(new_card)
 
     def start_game(self):
+        # Support for Turns
+        
         for card in self.players[1].hand: # Opponent Card Flipped Onclick
             if event.type == pygame.MOUSEBUTTONUP and card.position.collidepoint(event.pos):
                 card.flipped = True
@@ -99,11 +101,9 @@ class Game:
             for c in card:
                 if event.type == pygame.MOUSEBUTTONUP and c.position.collidepoint(event.pos):
                     user_guess = input('Guess: ')
-                    print(user_guess)
-                    print(type(user_guess))
-                    print(type(c.value))
                     if user_guess == c.value:
                         print('Correct!')
+                        c.flipped = True
                     else:
                         user_card_idx = random.randint(0, len(self.players[0].hand) - 1)
                         random_card = self.players[0].hand[user_card_idx].value
