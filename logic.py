@@ -34,10 +34,19 @@ class Player:
     def display_hand(self):
         print(self.name)
         for x in self.hand:
-            print(x.position)
+            print(x.value)
 
     def sort_hand(self):
         self.hand.sort(key=lambda card: card.value)
+        for h in self.hand:
+            if h.value == 11:
+                h.value = 'J'
+            elif h.value == 12:
+                h.value = 'Q'
+            elif h.value == 13:
+                h.value = 'K'
+            else:
+                h.value = str(h.value)
 
     def draw_cards(self, screen, start_x, start_y):
         card_width = 75
@@ -54,16 +63,9 @@ class Player:
             
             card.position = pygame.draw.rect(screen, 'white', (x, y, card_width, card_height))
             
-            # Only display the value if the card is flipped
-            if card.flipped:
+            # Only display the value if the card is flipped or if User
+            if card.flipped or self.name == 'User':
                 value_text = str(card.value)
-                if card.value == 11:
-                    value_text = 'J'
-                elif card.value == 12:
-                    value_text = 'Q'
-                elif card.value == 13:
-                    value_text = 'K'
-                
                 value_rendered = font.render(value_text, True, 'black')
                 screen.blit(value_rendered, (x + 10, y + 10))
 
@@ -93,7 +95,19 @@ class Game:
             if event.type == pygame.MOUSEBUTTONUP and card.position.collidepoint(event.pos):
                 card.flipped = True
 
-        return True
+        for card in [self.players[2].hand + self.players[3].hand]:
+            for c in card:
+                if event.type == pygame.MOUSEBUTTONUP and c.position.collidepoint(event.pos):
+                    user_guess = input('Guess: ')
+                    print(user_guess)
+                    print(type(user_guess))
+                    print(type(c.value))
+                    if user_guess == c.value:
+                        print('Correct!')
+                    else:
+                        user_card_idx = random.randint(0, len(self.players[0].hand) - 1)
+                        random_card = self.players[0].hand[user_card_idx].value
+                        print("Wrong, your card ", random_card, "is now visible!")
     
 # Running PyGame
 screen_width, screen_height = 750, 1050
@@ -141,11 +155,9 @@ while run:
         New_Game.deal_cards(cards)
 
         for player in New_Game.players:
-            player.sort_hand()  # Sort the player's hand
-
-        # Flip User's cards after dealing
-        for card in user_player.hand:
-            card.flipped = True
+            player.sort_hand() # Sort the player's hand
+        for player in New_Game.players:
+            player.display_hand()
 
         dealing = False  # Set to False to avoid redealing and printing
 
