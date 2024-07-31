@@ -116,7 +116,7 @@ class Game:
                     card.flipped = 'User View'
         for card in [self.players[2].hand + self.players[3].hand]:
             for c in card:
-                if event.type == pygame.MOUSEBUTTONUP and c.position.collidepoint(event.pos):
+                if event.type == pygame.MOUSEBUTTONUP and c.position.collidepoint(event.pos) and not c.flipped:
                     user_guess = input('Guess: ')
                     if user_guess == str(c.value):
                         print('Correct!')
@@ -126,18 +126,19 @@ class Game:
                         random_idx = random.randint(0, len(random_player.hand) - 1)
                         random_card = random_player.hand[random_idx]
 
-                        # while random_card.flipped:
-                        #     random_player = self.players[random.randint(0, 1)]
-                        #     random_idx = random.randint(0, len(random_player.hand) - 1)
-                        #     random_card = random_player.hand[random_idx]
+                        if not all(u.flipped for u in self.players[0].hand + self.players[1].hand):
+                            while random_card.flipped:
+                                random_player = self.players[random.randint(0, 1)]
+                                random_idx = random.randint(0, len(random_player.hand) - 1)
+                                random_card = random_player.hand[random_idx]
 
                         random_card.flipped = True
                         print("Wrong",  random_player.name, "'s card", random_card.value, "is now visible!")
 
-                        if all(u.flipped for u in self.players[0].hand):
-                            print('You lost!')
-                if all(a.flipped for a in self.players[2].hand) or all(b.flipped for b in self.players[3].hand):
-                    print('You won!') # Guess all cards for either bot
+                #         if all(u.flipped for u in self.players[0].hand) or all(u.flipped for u in self.players[1].hand):
+                #             print('You lost!')
+                # if all(a.flipped for a in self.players[2].hand) or all(b.flipped for b in self.players[3].hand):
+                #     print('You won!') # Guess all cards for either bot
 
     
 # Running PyGame
