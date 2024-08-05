@@ -33,7 +33,7 @@ button_font = pygame.font.Font('freesansbold.ttf', 24)
 active = False
 initial_deal = False
 win = False
-player_turn = True
+player_turn = False
 players = []
 teams = []
 win_results = []
@@ -106,10 +106,10 @@ def simulate_loop():
     w = False
     
     while not w:
-        w, winner, loser = simulate_game(turn)
+        w, winner, loser, guess = simulate_turn(turn)
         turn += 1
         
-    return w, winner, loser
+    return w, winner, loser, guess
         
 def simulate_turn(turn):
     end = False
@@ -151,7 +151,9 @@ def simulate_turn(turn):
         f"{index+1} card as a {rank}"
         ]
         
-    if opponent.hand[index].guess(rank):
+    guess = opponent.hand[index].guess(rank)
+        
+    if guess:
         text.append("correctly")
         string = " ".join(text)
         
@@ -180,10 +182,14 @@ def simulate_turn(turn):
         player.flip(index)
         player.idx.remove(index)
         end = check_endgame(player)
+        
+        if end:
+            add_turn(string, turn, color)
+            return end, opponent, player, guess
     
     add_turn(string, turn, color)
     
-    return end, player, opponent
+    return end, player, opponent, guess
         
 def check_endgame(player):
     if len(player.idx) == 0:
@@ -318,18 +324,27 @@ def draw_win():
     
     winner = win_results[0]
     loser = win_results[1]
-    turn = win_results[2]
+    guess = win_results[2]
+    turn = win_results[3]
     
     for i in range(len(teams)):
         if teams[i].count(winner) > 0:
             winning_team = teams[i][2]
     
-    text = [
-        f"[{winner.name}] guessed [{loser.name}]'s",
-        f"final card correctly on Turn {turn}",
-        f"{winning_team} Wins!"
-    ]
+    if guess:
+        text = [
+            f"[{winner.name}] guessed [{loser.name}]'s",
+            f"final card correctly on Turn {turn}",
+            f"{winning_team} Wins!"
+        ]
     
+    else:
+            text = [
+            f"[{loser.name}] guessed [{winner.name}]'s card",
+            f"incorrectly and flipped their last card on Turn {turn}",
+            f"{winning_team} Wins!"
+        ]
+        
     pos = [
         log_pos,
         log_pos + log_height + 15,
@@ -559,19 +574,20 @@ while run:
                 if event.key == pygame.K_SPACE:
                     turn_number = len(log) + 1
                     
-#                    win, winner, loser = simulate_loop()
-                    if turn_number%4 != 1:
-                        win, winner, loser = simulate_turn(turn_number)
-                        
-                        if turn_number%4 == 0:
-                            player_turn = True
+                    win, winner, loser, guess = simulate_loop()
+#                    if turn_number%4 != 1:
+#                        win, winner, loser = simulate_turn(turn_number)
+#                        
+#                        if turn_number%4 == 0:
+#                            player_turn = True
 
                     if win:
                         win_results = [
                             winner,
                             loser,
-#                            len(log)
-                            turn_number
+                            guess,
+                            len(log)
+#                            turn_number
                             ]
                         
     draw_log(visible_log)
