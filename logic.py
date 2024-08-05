@@ -28,7 +28,7 @@ fps = 60
 timer = pygame.time.Clock()
 font = pygame.font.Font('freesansbold.ttf', 30)
 title_font = pygame.font.Font('freesansbold.ttf', 80)
-log_font = pygame.font.Font('freesansbold.ttf', 18)
+log_font = pygame.font.Font('freesansbold.ttf', 13)
 button_font = pygame.font.Font('freesansbold.ttf', 24)
 active = False
 initial_deal = False
@@ -74,25 +74,21 @@ class Card:
         self.flipped = False
 
     def guess(self, rank):
-        text = []
-        
         if self.rank == rank:
             self.flipped = True
-        else:
-            text.append("in")
         
-        text.append("correctly")
-        
-        string = "".join(text)
-        
-        return string
+        return self.flipped
 
 class Player:
     def __init__(self, name):
         self.name = name
         self.hand = []
+        
+        # list of indices for cards in player's hand that are not yet flipped
         self.idx = [0, 1, 2, 3, 4, 5]
-        self.flipped = [False, False, False, False, False, False]
+        
+    def flip(self, index):
+        self.hand[index].flipped = True
 
 class Button:
     def __init__(self, rect, rank, action):
@@ -127,7 +123,7 @@ def simulate_turn(turn):
     if player_turn:
         opponent = turn_info[0]
         index = turn_info[1]
-        guess = turn_info[2]
+        rank = turn_info[2]
     
     else:
         # player guesses cards of the opponent to their left
@@ -143,26 +139,48 @@ def simulate_turn(turn):
         # sets the index of the opponent's card that the player will guess
         index = opponent.idx[x]
         
-        # randomly chooses which card rank to guess from valid options
-        guess = random.randint(lowest_guess[index], highest_guess[index])
+        # generates a random index from possible rank guesses
+        y = random.randint(lowest_guess[index], highest_guess[index])
+        
+        # sets rank of guess
+        rank = cards[y]
     
     text = [
         f"Turn {turn}:",
         f"[{player.name}] guessed [{opponent.name}]'s",
-        f"{index+1} card as a {guess}",
-        f"{opponent.hand[index].guess(guess)}"
+        f"{index+1} card as a {rank}"
         ]
-    
-    string = " ".join(text)
-    
-    if opponent.hand[index].flipped:
+        
+    if opponent.hand[index].guess(rank):
+        text.append("correctly")
+        string = " ".join(text)
+        
         opponent.idx.remove(index)
         end = check_endgame(opponent)
         color = CORRECT
         
         if DEBUG:
             print(string)
+            
+    else:
+        # generates a random index from player's facedown cards
+        x = random.randint(0, len(player.idx) - 1)
         
+        # sets the index of a player's card that they will flip
+        index = player.idx[x]
+        
+        wrong = [
+            "incorrectly and reveals their",
+            f"{index+1} card as a {player.hand[index].rank}"
+            ]
+            
+        text.extend(wrong)
+        string = " ".join(text)
+        
+        player.flip(index)
+        player.idx.remove(index)
+        end = check_endgame(player)
+    
     add_turn(string, turn, color)
     
     return end, player, opponent
