@@ -33,9 +33,15 @@ button_font = pygame.font.Font('freesansbold.ttf', 24)
 active = False
 initial_deal = False
 win = False
+player_turn = True
 players = []
 teams = []
 win_results = []
+card_click = False
+guess_click = False
+card_info = []
+guess_info = []
+turn_info = []
 
 # Define colors
 BLACK = 'black'
@@ -61,12 +67,43 @@ log_height = 320
 log = []
 visible_log = []
 
+class Card:
+    def __init__(self, rank):
+        self.rank = rank
+        self.value = rank_order[rank]
+        self.flipped = False
+
+    def guess(self, rank):
+        text = []
+        
+        if self.rank == rank:
+            self.flipped = True
+        else:
+            text.append("in")
+        
+        text.append("correctly")
+        
+        string = "".join(text)
+        
+        return string
+
 class Player:
     def __init__(self, name):
         self.name = name
         self.hand = []
         self.idx = [0, 1, 2, 3, 4, 5]
         self.flipped = [False, False, False, False, False, False]
+
+class Button:
+    def __init__(self, rect, rank, action):
+        self.rect = rect
+        self.rank = rank
+        self.action = action
+        
+    def add_vars(self, player, index, card):
+        self.player = player
+        self.index = index
+        self.card = card
         
 def simulate_loop():
     turn = 1
@@ -78,7 +115,7 @@ def simulate_loop():
         
     return w, winner, loser
         
-def simulate_game(turn):
+def simulate_turn(turn):
     end = False
     
     # sets current player depedning on turn
@@ -87,32 +124,38 @@ def simulate_game(turn):
     # sets turn color to black
     color = BLACK
     
-    # player guesses cards of the opponent to their left
-    opponent = players[turn%4]
+    if player_turn:
+        opponent = turn_info[0]
+        index = turn_info[1]
+        guess = turn_info[2]
     
-    # chance that the player will guess the cards of opponent to their right
-    if random.getrandbits(1):
-        opponent = players[turn%4 - 2]
-    
-    # generates a random index from opponent's facedown cards
-    x = random.randint(0, len(opponent.idx) - 1)
-    
-    # sets the index of the opponent's card that the player will guess
-    index = opponent.idx[x]
-    
-    # randomly chooses which card rank to guess from valid options
-    guess = random.randint(lowest_guess[index], highest_guess[index])
+    else:
+        # player guesses cards of the opponent to their left
+        opponent = players[turn%4]
+        
+        # chance that the player will guess the cards of opponent to their right
+        if random.getrandbits(1):
+            opponent = players[turn%4 - 2]
+        
+        # generates a random index from opponent's facedown cards
+        x = random.randint(0, len(opponent.idx) - 1)
+        
+        # sets the index of the opponent's card that the player will guess
+        index = opponent.idx[x]
+        
+        # randomly chooses which card rank to guess from valid options
+        guess = random.randint(lowest_guess[index], highest_guess[index])
     
     text = [
         f"Turn {turn}:",
         f"[{player.name}] guessed [{opponent.name}]'s",
-        f"{index+1} card as a {cards[guess]}",
-        f"{guess_card(opponent, index, cards[guess])}"
+        f"{index+1} card as a {guess}",
+        f"{opponent.hand[index].guess(guess)}"
         ]
     
     string = " ".join(text)
     
-    if opponent.flipped[index]:
+    if opponent.hand[index].flipped:
         opponent.idx.remove(index)
         end = check_endgame(opponent)
         color = CORRECT
@@ -128,13 +171,6 @@ def check_endgame(player):
     if len(player.idx) == 0:
         return True
     return False
-        
-def guess_card(player, index, guess):
-    if player.hand[index] == guess:
-        player.flipped[index] = True
-        return "correctly"
-        
-    return "incorrectly"
 
 def initialize_players():
     # clear previous players if any
@@ -162,7 +198,7 @@ def initialize_players():
     
 # get key of card based on rank
 def card_key(card):
-    return rank_order[card]
+    return card.value
 
 def clear_logs():
     log.clear()
@@ -170,14 +206,19 @@ def clear_logs():
 
 # deal cards by selecting randomly from deck, and make function for one card at a time
 def deal_cards(current_hand, current_deck):
-    card = random.randint(0, len(current_deck) - 1)
-    current_hand.append(current_deck[card])
-    current_deck.pop(card)
+    card_index = random.randint(0, len(current_deck) - 1)
+    card = Card(current_deck[card_index])
+    current_hand.append(card)
+    current_deck.pop(card_index)
             
     return current_hand, current_deck
 
 # draw cards visually onto screen depending on hand, x and y starting positions, whether or not they're displayed vertically, and what order the ranks should be displayed
 def draw_cards(player, x, y, vertical, order):
+    card_buttons = []
+    
+    hand = player.hand
+    
     for i in range(len(player.hand)):
         if not vertical:
             x = corner_length + (card_width + space) * i
@@ -189,18 +230,24 @@ def draw_cards(player, x, y, vertical, order):
             h = card_width
         
         # white card
-        pygame.draw.rect(screen, WHITE, [x, y, w, h], 0, 5)
+        card = pygame.draw.rect(screen, WHITE, [x, y, w, h], 0, 5)
+        
+        # black border
+        pygame.draw.rect(screen, BLACK, [x, y, w, h], 5, 5)
+        
+        rank = ""
         
         pos = [x + 10, y + 10]
         
         # display rank on cards only if card is flipped
-        if order and player.flipped[i]:
-            rank = font.render(player.hand[i], True, BLACK)
-            screen.blit(rank, pos)
+        if order and hand[i].flipped:
+            rank = hand[i].rank
             
-        elif not order and player.flipped[5 - i]:
-            rank = font.render(player.hand[5 - i], True, BLACK)
-            screen.blit(rank, pos)
+        elif not order and hand[5 - i].flipped:
+            rank = hand[5 - i].rank
+        
+        rank_text = font.render(rank, True, BLACK)
+        screen.blit(rank_text, pos)
             
         if DEBUG:
             # update y pos for debug rank
@@ -208,18 +255,25 @@ def draw_cards(player, x, y, vertical, order):
             
             # display debug ranks
             if order:
-                rank = player.hand[i]
-                rank_text = log_font.render(rank, True, BLACK)
-                screen.blit(rank_text, pos)
+                rank = hand[i].rank
                 
             else:
-                rank = player.hand[5 - i]
-                rank_text = log_font.render(rank, True, BLACK)
-                screen.blit(rank_text, pos)
+                rank = hand[5 - i].rank
+                
+            rank_text = log_font.render(rank, True, BLACK)
+            screen.blit(rank_text, pos)
         
-        # black border
-        pygame.draw.rect(screen, BLACK, [x, y, w, h], 5, 5)
+        index = i
         
+        if not order:
+            index = 5 - i
+            
+        butt = Button(card, hand[index].rank, "guess_card")
+        butt.add_vars(player, index, hand[index])
+        
+        card_buttons.append(butt)
+        
+    return card_buttons
         
 # appends turns to the logs
 def add_turn(string, turn, color):
@@ -326,13 +380,15 @@ def draw_buttons():
         rank = button_font.render(cards[i], True, BLACK)
         screen.blit(rank, (pos[0] + 30, pos[1] + 6))
         
-        button_list.append(button, card[i])
+        button_list.append(Button(button, cards[i], "guess_rank"))
         
     return button_list
 
 # draws game elements depending on scene
 def draw_game(act):
     button_list = []
+    rank_buttons = []
+    card_buttons = []
     
     # initially on startup (not active) only option is to start game
     if not active:
@@ -364,14 +420,36 @@ def draw_game(act):
         pygame.draw.rect(screen, WHITE, [pos, dimensions], 0, 5)
         pygame.draw.rect(screen, BLACK, [pos, dimensions], 5, 5)
         
-#        rank_buttons = draw_buttons()
+        # display cards
+        pos = [
+            corner_length,                  # offset window corner
+            WIDTH - space - card_height,    # offset card length
+            space                           # offset window edge
+            ]
+        
+        # draws user's hand at the bottom of the board
+        draw_cards(players[0], pos[0], pos[1], False, True)
+        
+        # draws user's partner's hand at the top of the board
+        draw_cards(players[2], pos[0], pos[2], False, False)
+        
+        # draws opponent's hand on the left side of the board
+        left_cards = draw_cards(players[1], pos[2], pos[0], True, True)
+        
+        # draws opponent's partner's hand on the right side of the board
+        right_cards = draw_cards(players[3], pos[1], pos[0], True, False)
+        
+        card_buttons = left_cards
+        card_buttons.extend(right_cards)
+        
+        rank_buttons = draw_buttons()
         
         if win:
             exit, play = draw_win()
             button_list.append(exit)
             button_list.append(play)
 
-    return button_list
+    return button_list, rank_buttons, card_buttons
 
 # main game loop
 run = True
@@ -393,26 +471,7 @@ while run:
             x.hand = sorted(x.hand, key = card_key)
     
     # once game is started, and cards are dealt, display board
-    if active:
-        pos = [
-            corner_length,                  # offset window corner
-            WIDTH - space - card_height,    # offset card length
-            space                           # offset window edge
-            ]
-        
-        # draws user's hand at the bottom of the board
-        draw_cards(players[0], pos[0], pos[1], False, True)
-        
-        # draws opponent's hand on the left side of the board
-        draw_cards(players[2], pos[0], pos[2], False, False)
-        
-        # draws user's partner's hand at the top of the board
-        draw_cards(players[1], pos[2], pos[0], True, True)
-        
-        # draws opponent's partner's hand on the right side of the board
-        draw_cards(players[3], pos[1], pos[0], True, False)
-    
-    buttons = draw_game(active)
+    buttons, rank_buttons, card_buttons = draw_game(active)
     
     # event handling, if quit pressed, then exit game
     for event in pygame.event.get():
@@ -440,11 +499,42 @@ while run:
                     initialize_players()
                     clear_logs()
                     
-#                for button in rank_buttons:
-#                    if button[0].collidepoint(event.pos):
+            elif player_turn:
+                for card in card_buttons:
+                    if card.rect.collidepoint(event.pos):
+                        print(f"Pressed {card.player.name}\'s {card.index + 1} card which has a rank of {card.rank}!")
+                        card_info = [
+                            card.player,
+                            card.index
+                            ]
+                        card_click = True
                         
+                            
+                for guess in rank_buttons:
+                    if guess.rect.collidepoint(event.pos):
+                        print(f"Pressed {guess.rank} button!")
+                        guess_info = guess.rank
+                        guess_click = True
                         
-                
+                if card_click and guess_click:
+                    turn_info = [
+                        card_info[0],
+                        card_info[1],
+                        guess_info
+                        ]
+                    win, winner, loser = simulate_turn(len(log) + 1)
+                    
+                    if win:
+                        win_results = [
+                            winner,
+                            loser,
+                            len(log)
+                            ]
+                        
+                    player_turn = False
+                    card_click = False
+                    guess_click = False
+                        
         # placeholder functionality to test log
         if active and not win:
             if event.type == pygame.KEYDOWN:
@@ -452,8 +542,11 @@ while run:
                     turn_number = len(log) + 1
                     
 #                    win, winner, loser = simulate_loop()
-                    
-                    win, winner, loser = simulate_game(turn_number)
+                    if turn_number%4 != 1:
+                        win, winner, loser = simulate_turn(turn_number)
+                        
+                        if turn_number%4 == 0:
+                            player_turn = True
 
                     if win:
                         win_results = [
