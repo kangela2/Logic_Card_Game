@@ -38,6 +38,10 @@ class Player:
         for x in self.hand:
             print(x.value)
 
+    def rename(self):
+        name_input = input(f'Name player {self.name}: ')
+        self.name = name_input
+
     def sort_hand(self):
         self.hand.sort(key=lambda card: card.value)
         for h in self.hand:
@@ -56,12 +60,15 @@ class Player:
         spacing = 20
 
         for i, card in enumerate(self.hand):
+            display_name = font.render(self.name, True, 'purple')
             if card.card_type == 'horizontal':
                 x = start_x + i * (card_width + spacing)
                 y = start_y
+                screen.blit(display_name, (25, y))
             else:  # vertical
                 x = start_x
                 y = start_y + i * card_height
+                screen.blit(display_name, (x, 100))
             
             card.position = pygame.draw.rect(screen, 'white', (x, y, card_width, card_height)) if card.card_type == 'horizontal' else pygame.draw.rect(screen, 'white', (x, y, card_height, card_width))
         
@@ -168,7 +175,7 @@ while run:
         pos = [button_x, button_y, button_width, button_height]
         start = pygame.draw.rect(screen, 'red', pos, 0, 5)
         pygame.draw.rect(screen, 'green', pos, 5, 5)
-        start_text = font.render('START', True, 'black')
+        start_text = font.render('Make sure Terminal is in view, then click this button', True, 'black')
         text_rect = start_text.get_rect(center=(button_x + button_width // 2, button_y + button_height // 2))
         screen.blit(start_text, text_rect)
 
@@ -188,6 +195,7 @@ while run:
 
         for player in New_Game.players:
             player.sort_hand() # Sort the player's hand
+            player.rename()
         for player in New_Game.players:
             player.display_hand()
 
