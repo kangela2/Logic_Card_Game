@@ -61,11 +61,11 @@ class Player:
                 y = start_y
             else:  # vertical
                 x = start_x
-                y = start_y + i * (card_height + spacing)
+                y = start_y + i * card_height
             
-            card.position = pygame.draw.rect(screen, 'white', (x, y, card_width, card_height))
+            card.position = pygame.draw.rect(screen, 'white', (x, y, card_width, card_height)) if card.card_type == 'horizontal' else pygame.draw.rect(screen, 'white', (x, y, card_height, card_width))
         
-            # Only display the value if the card is flipped or if User
+            # Only display the value if User, Flipped or Partner
             if self.name == 'User':
                 value_text = str(card.value)
                 value_rendered = font.render(value_text, True, 'red' if card.flipped else 'black')
@@ -106,10 +106,9 @@ class Game:
 
         return True
 
-    def start_game(self):
-        # Support for Turns
+    def start_game(self):        
 
-        self.enable_game_log()
+        # self.enable_game_log()
 
         for i, card in enumerate(self.players[1].hand): # Opponent Card Flipped Onclick
             if event.type == pygame.MOUSEBUTTONUP and card.position.collidepoint(event.pos):
@@ -143,8 +142,8 @@ class Game:
 
     
 # Running PyGame
-screen_width, screen_height = 750, 1050
-screen = pygame.display.set_mode([screen_width, screen_height])
+screen_width, screen_height = 900, 900
+screen = pygame.display.set_mode([screen_width, screen_height], pygame.RESIZABLE)
 font = pygame.font.Font('freesansbold.ttf', 30)
 
 active = True
@@ -196,10 +195,10 @@ while run:
 
     if not active:
         # Draw cards for each player
-        New_Game.players[0].draw_cards(screen, 100, 900)   # User
-        New_Game.players[1].draw_cards(screen, 100, 25)  # Partner
-        New_Game.players[2].draw_cards(screen, 25, 150)   # Bot 1
-        New_Game.players[3].draw_cards(screen, 650, 150)  # Bot 2
+        New_Game.players[0].draw_cards(screen, 160, 750)   # User
+        New_Game.players[1].draw_cards(screen, 160, 25)  # Partner
+        New_Game.players[2].draw_cards(screen, 25, 125)   # Bot 1
+        New_Game.players[3].draw_cards(screen, 750, 125)  # Bot 2
 
         New_Game.start_game()
 
