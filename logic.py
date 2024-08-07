@@ -30,13 +30,18 @@ font = pygame.font.Font('freesansbold.ttf', 30)
 title_font = pygame.font.Font('freesansbold.ttf', 80)
 log_font = pygame.font.Font('freesansbold.ttf', 13)
 button_font = pygame.font.Font('freesansbold.ttf', 24)
+
+# Define game board variables
 active = False
 initial_deal = False
 win = False
-player_turn = False
+player_turn = True
 players = []
 teams = []
 win_results = []
+flipped_cards = []
+
+# Define card and guess button variables
 card_click = False
 guess_click = False
 card_info = []
@@ -51,6 +56,7 @@ CORRECT = 'forestgreen'
 
 # DEBUG bool determines whether or not to print debug statements to terminal
 DEBUG = True
+S_GAME = False
 
 # Define the size of each card
 card_width = 75
@@ -83,6 +89,7 @@ class Player:
     def __init__(self, name):
         self.name = name
         self.hand = []
+        self.visible = []
         
         # list of indices for cards in player's hand that are not yet flipped
         self.idx = [0, 1, 2, 3, 4, 5]
@@ -101,7 +108,7 @@ class Button:
         self.index = index
         self.card = card
         
-def simulate_loop():
+def simulate_game():
     turn = 1
     w = False
     
@@ -150,8 +157,9 @@ def simulate_turn(turn):
         f"[{player.name}] guessed [{opponent.name}]'s",
         f"{index+1} card as a {rank}"
         ]
-        
-    guess = opponent.hand[index].guess(rank)
+    
+    card = opponent.hand[index]
+    guess = card.guess(rank)
         
     if guess:
         text.append("correctly")
@@ -160,7 +168,7 @@ def simulate_turn(turn):
         opponent.idx.remove(index)
         end = check_endgame(opponent)
         color = CORRECT
-        
+                
         if DEBUG:
             print(string)
             
@@ -171,9 +179,11 @@ def simulate_turn(turn):
         # sets the index of a player's card that they will flip
         index = player.idx[x]
         
+        card = player.hand[index]
+        
         wrong = [
             "incorrectly and reveals their",
-            f"{index+1} card as a {player.hand[index].rank}"
+            f"{index+1} card as a {card.rank}"
             ]
             
         text.extend(wrong)
@@ -182,10 +192,12 @@ def simulate_turn(turn):
         player.flip(index)
         player.idx.remove(index)
         end = check_endgame(player)
-        
+    
         if end:
             add_turn(string, turn, color)
             return end, opponent, player, guess
+            
+    flipped_cards.append(card.rank)
     
     add_turn(string, turn, color)
     
@@ -229,13 +241,23 @@ def clear_logs():
     visible_log.clear()
 
 # deal cards by selecting randomly from deck, and make function for one card at a time
-def deal_cards(current_hand, current_deck):
+def deal_cards(player, current_deck):
+    # choose a random index from deck
     card_index = random.randint(0, len(current_deck) - 1)
+    
+    # create a Card object from rank in deck
     card = Card(current_deck[card_index])
-    current_hand.append(card)
+    
+    # add card from deck to player's hand
+    player.hand.append(card)
+    
+    # add card in player's hand to list of cards visible to player
+    player.visible.append(card.rank)
+    
+    # remove added card from deck
     current_deck.pop(card_index)
             
-    return current_hand, current_deck
+    return player, current_deck
 
 # draw cards visually onto screen depending on hand, x and y starting positions, whether or not they're displayed vertically, and what order the ranks should be displayed
 def draw_cards(player, x, y, vertical, order):
@@ -495,7 +517,7 @@ while run:
     if initial_deal:
         for i in range(6):
             for x in players:
-                x.hand, game_deck = deal_cards(x.hand, game_deck)
+                x, game_deck = deal_cards(x, game_deck)
         
         initial_deal = False
         
@@ -536,12 +558,12 @@ while run:
                 for card in card_buttons:
                     if card.rect.collidepoint(event.pos):
                         print(f"Pressed {card.player.name}\'s {card.index + 1} card which has a rank of {card.rank}!")
-                        card_info = [
-                            card.player,
-                            card.index
-                            ]
-                        card_click = True
-                        
+                        if not card.card.flipped:
+                            card_info = [
+                                card.player,
+                                card.index
+                                ]
+                            card_click = True
                             
                 for guess in rank_buttons:
                     if guess.rect.collidepoint(event.pos):
@@ -555,12 +577,13 @@ while run:
                         card_info[1],
                         guess_info
                         ]
-                    win, winner, loser = simulate_turn(len(log) + 1)
+                    win, winner, loser, guess = simulate_turn(len(log) + 1)
                     
                     if win:
                         win_results = [
                             winner,
                             loser,
+                            guess,
                             len(log)
                             ]
                         
@@ -574,21 +597,32 @@ while run:
                 if event.key == pygame.K_SPACE:
                     turn_number = len(log) + 1
                     
-                    win, winner, loser, guess = simulate_loop()
-#                    if turn_number%4 != 1:
-#                        win, winner, loser = simulate_turn(turn_number)
-#                        
-#                        if turn_number%4 == 0:
-#                            player_turn = True
+                    if S_GAME:
+                        player_turn = False
+                        win, winner, loser, guess = simulate_game()
+                        
+                        if win:
+                            win_results = [
+                                winner,
+                                loser,
+                                guess,
+                                len(log)
+                                ]
+                        
+                    else:
+                        if turn_number%4 != 1:
+                            win, winner, loser, guess = simulate_turn(turn_number)
+                            
+                            if turn_number%4 == 0:
+                                player_turn = True
 
-                    if win:
-                        win_results = [
-                            winner,
-                            loser,
-                            guess,
-                            len(log)
-#                            turn_number
-                            ]
+                        if win:
+                            win_results = [
+                                winner,
+                                loser,
+                                guess,
+                                turn_number
+                                ]
                         
     draw_log(visible_log)
 
