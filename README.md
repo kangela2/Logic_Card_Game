@@ -8,7 +8,8 @@ A correct guess warrants the opponent to flip over the guessed card. A wrong gue
 The objective of each team is to flip over all six cards of either of their opponents.
 
 # Team Info
-- vilnytskyy - Ilnytskyy, Vasyl 
+- vilnytskyy - Ilnytskyy, Vasyl
+- Patience - PatienceDesign, StudentActivities, Patience Elliott
 
 # Documentation
 
@@ -32,6 +33,9 @@ User's begin at the main menu and are taken to the game board on clicking the st
 During the user's turn, they are prompted to choose which of their opponents cards they'd like to guess. Upon a correct guess, the card they chose to guess is flipped over. Upon a wrong guess, the user is prompted to select a card from their hand they would like to flip over.
 Each turn is documented in the game log, and the last 15 turns are visible to the player.
 Upon winning conditions being met, the user is able to see who won the game and is prompted with the choice of exiting the game or playing again. 
+
+# Patience's Implementation
+Please see [here](https://github.com/kangela2/Logic_Card_Game/tree/card_class).
 
 # Game Rules for tabletop game
 
