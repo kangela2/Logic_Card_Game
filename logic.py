@@ -73,7 +73,7 @@ class Player:
             card.position = pygame.draw.rect(screen, 'white', (x, y, card_width, card_height)) if card.card_type == 'horizontal' else pygame.draw.rect(screen, 'white', (x, y, card_height, card_width))
         
             # Only display the value if User, Flipped or Partner
-            if self.name == 'User':
+            if self.name == 'You':
                 value_text = str(card.value)
                 value_rendered = font.render(value_text, True, 'red' if card.flipped else 'black')
                 screen.blit(value_rendered, (x + 10, y + 10))
@@ -185,7 +185,7 @@ while run:
 
     if dealing: # Initialize Players and Deal Cards
         New_Game = Game('New Game')
-        user_player = Player('User')
+        user_player = Player('You')
         New_Game.players.append(user_player)
         New_Game.players.append(Player('Partner'))
         New_Game.players.append(Player('Bot 1'))
@@ -195,7 +195,8 @@ while run:
 
         for player in New_Game.players:
             player.sort_hand() # Sort the player's hand
-            player.rename()
+            if player.name != 'You':
+                 player.rename()
         for player in New_Game.players:
             player.display_hand()
 
