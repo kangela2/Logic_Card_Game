@@ -243,9 +243,10 @@ def initialize_players():
 def card_key(card):
     return card.value
 
-def clear_logs():
+def clear_lists():
     log.clear()
     visible_log.clear()
+    flipped_cards.clear()
 
 # deal cards by selecting randomly from deck, and make function for one card at a time
 def deal_cards(player, current_deck):
@@ -552,19 +553,22 @@ while run:
             if win:
                 if buttons[0].collidepoint(event.pos):
                     active = False
-                    clear_logs()
+                    player_turn = True
+                    clear_lists()
                     
                 elif buttons[1].collidepoint(event.pos):
                     win = False
                     initial_deal = True
+                    player_turn = True
                     game_deck = copy.deepcopy(deck)
                     initialize_players()
-                    clear_logs()
+                    clear_lists()
                     
             elif player_turn:
                 for card in card_buttons:
                     if card.rect.collidepoint(event.pos):
-                        print(f"Pressed {card.player.name}\'s {card.index + 1} card which has a rank of {card.rank}!")
+                        if DEBUG:
+                            print(f"Pressed {card.player.name}\'s {card.index + 1} card which has a rank of {card.rank}!")
                         if not card.card.flipped:
                             card_info = [
                                 card.player,
