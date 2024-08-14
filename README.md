@@ -1,25 +1,33 @@
 # Logic
 
 Logic is a 2v2 card game of educated guesses. 
+
 The deck consists of 24 cards, two sets of 12 cards ranging from 2 to King.
+
 Each player is dealt six cards which are placed face down and sorted from lowest to highest depending on their rank.
+
 During their turn, a player is able to view one of their partner's cards and guess one of their opponent's cards.
+
 A correct guess warrants the opponent to flip over the guessed card. A wrong guess warrants the player to flip over one of their cards.
+
 The objective of each team is to flip over all six cards of either of their opponents.
 
 # Team Info
-- vilnytskyy - Ilnytskyy, Vasyl
+- Vasyl - vilnytskyy
 - Patience - PatienceDesign, StudentActivities, Patience Elliott
+- Angela - kangela2
 
 # Documentation
 
 ## Running the game
 
-Our project is split between two branches.
-To run Patience's implementation checkout to the card_class branch.
-To run Vasyl's implementation chechkout to the game-buttons branch.
+Our project is split between three branches.
 
-Once you checkout your desired branch, run the following command in your terminal:
+To run Vasyl's implementation checkout to the main branch.\
+To run Patience's implementation checkout to the card_class branch.\
+To run Angela's implementation checkout to the game_buttons branch.
+
+Once you checkout to your desired branch, run the following command in your terminal:
 
 ```bash
 python3 logic.py
@@ -30,14 +38,20 @@ Made using pygame.
 # Vasyl's Implementation
 
 User's begin at the main menu and are taken to the game board on clicking the start button.
+
 During the user's turn, they are prompted to choose which of their opponents cards they'd like to guess. Upon a correct guess, the card they chose to guess is flipped over. Upon a wrong guess, the user is prompted to select a card from their hand they would like to flip over.
+
 Each turn is documented in the game log, and the last 15 turns are visible to the player.
+
 Upon winning conditions being met, the user is able to see who won the game and is prompted with the choice of exiting the game or playing again. 
 
 # Patience's Implementation
 Please see [here](https://github.com/kangela2/Logic_Card_Game/tree/card_class).
 
-# Game Rules for tabletop game
+# Angela's Implementation
+Please see [here](https://github.com/kangela2/Logic_Card_Game/tree/game_buttons).
+
+# Game Rules for Tabletop Game
 
 ## Setup
 
@@ -57,7 +71,8 @@ Second, the player must pick a card from the opponent's side and guess what is t
 
 ## Other Rules
 
-A player is only allowed to look at one of their partner's card during their turn. Their partner can send a card that was previously sent before. 
+A player is only allowed to look at one of their partner's card during their turn. Their partner can send a card that was previously sent before.
+
 All communication must be open ie, when talking to your partner, they and the opponents will hear what you will say. 
 
 ## Win Conditions
