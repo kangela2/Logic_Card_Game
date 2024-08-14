@@ -39,7 +39,7 @@ Made using pygame.
 
 User's begin at the main menu and are taken to the game board on clicking the start button.
 
-During the user's turn, they are prompted to choose which of their opponents cards they'd like to guess. Upon a correct guess, the card they chose to guess is flipped over. Upon a wrong guess, the user is prompted to select a card from their hand they would like to flip over.
+During the user's turn, they are prompted to choose which of their opponents cards they'd like to guess. Upon a correct guess, the card they chose to guess is flipped over. Upon a wrong guess, a random facedown card of the user is flipped over.
 
 Each turn is documented in the game log, and the last 15 turns are visible to the player.
 
