@@ -169,7 +169,7 @@ while run:
 
     if active:
         # Start Button
-        button_width, button_height = 130, 50
+        button_width, button_height = 800, 50
         button_x = (screen_width - button_width) // 2
         button_y = (screen_height - button_height) // 2
         pos = [button_x, button_y, button_width, button_height]
