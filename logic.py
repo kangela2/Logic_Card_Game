@@ -147,7 +147,12 @@ def simulate_turn(turn):
         index = opponent.idx[x]
         
         # generates a random index from possible rank guesses
-        y = random.randint(lowest_guess[index], highest_guess[index])
+        y = random.randint(lowest_guess[index], highest_guess[index]) 
+        
+        possible_guesses = [x for x in deck if x not in flipped_cards or x not in player.visible]
+        
+        while possible_guesses.count(cards[y]) < 1:
+            y = random.randint(lowest_guess[index], highest_guess[index])
         
         # sets rank of guess
         rank = cards[y]
@@ -166,6 +171,7 @@ def simulate_turn(turn):
         string = " ".join(text)
         
         opponent.idx.remove(index)
+        opponent.visible.remove(card.rank)
         end = check_endgame(opponent)
         color = CORRECT
                 
@@ -191,6 +197,7 @@ def simulate_turn(turn):
         
         player.flip(index)
         player.idx.remove(index)
+        player.visible.remove(card.rank)
         end = check_endgame(player)
     
         if end:
